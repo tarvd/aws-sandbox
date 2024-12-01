@@ -4,3 +4,15 @@
 2024-12-01 15:35:39 - Found credentials in shared credentials file: ~/.aws/credentials
 2024-12-01 15:35:40 - File already exists on S3.
 2024-12-01 15:35:40 - Program ended after finding an S3 object at s3://tdouglas-data-prod-useast2/data/raw/openpowerlifting/lifter/openpowerlifting-lifter-20241201.zip
+2024-12-01 15:44:21 - Program started with url=https://openpowerlifting.gitlab.io/opl-csv/files/openpowerlifting-latest.zip and filename=openpowerlifting-lifter-20241201.zip
+2024-12-01 15:44:24 - Response received from: https://openpowerlifting.gitlab.io/opl-csv/files/openpowerlifting-latest.zip
+2024-12-01 15:44:24 - Archive saved to: openpowerlifting-lifter-20241201.zip
+2024-12-01 15:44:24 - Found credentials in shared credentials file: ~/.aws/credentials
+2024-12-01 15:44:25 - File already exists on S3.
+2024-12-01 15:44:25 - Program ended after finding an S3 object at s3://tdouglas-data-prod-useast2/data/raw/openpowerlifting/lifter/openpowerlifting-lifter-20241201.zip
+2024-12-01 16:03:13 - Program started with url=https://openpowerlifting.gitlab.io/opl-csv/files/openpowerlifting-latest.zip and filename=openpowerlifting-lifter-20241201.zip
+2024-12-01 16:03:16 - Response received from: https://openpowerlifting.gitlab.io/opl-csv/files/openpowerlifting-latest.zip
+2024-12-01 16:03:16 - Archive saved to: openpowerlifting-lifter-20241201.zip
+2024-12-01 16:03:16 - Found credentials in shared credentials file: ~/.aws/credentials
+2024-12-01 16:03:17 - File already exists on S3.
+2024-12-01 16:03:17 - Program ended after finding an S3 object at s3://tdouglas-data-prod-useast2/data/raw/openpowerlifting/lifter/openpowerlifting-lifter-20241201.zip

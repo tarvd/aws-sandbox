@@ -1,12 +1,10 @@
-import sys
 import logging
-
 import requests
 import awswrangler as wr
 import pandas as pd
 
 
-def download_file(url: str, filename: str) -> None:    
+def download_file_from_url(url: str, filename: str) -> None:    
     logging.info(f"Program started with url={url} and filename={filename}")
     try:
         # Get a response from the url
@@ -33,7 +31,7 @@ def upload_to_s3(filename: str, s3_path: str, overwrite=False) -> None:
         logging.info(f"Data upload complete.")
 
 
-def main():
+def main() -> None:
     logging.basicConfig(
         filename="openpowerlifting_lifter_ingestion_logfile.log",
         level=logging.INFO,
@@ -47,7 +45,7 @@ def main():
         f"s3://tdouglas-data-prod-useast2/data/raw/openpowerlifting/lifter/{filename}"
     )
 
-    download_file(url, filename)
+    download_file_from_url(url, filename)
     upload_to_s3(filename, s3_path)
 
 

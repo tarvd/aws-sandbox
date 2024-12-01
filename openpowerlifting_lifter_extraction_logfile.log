@@ -1,0 +1,10 @@
+2024-12-01 16:03:29 - Found credentials in shared credentials file: ~/.aws/credentials
+2024-12-01 16:03:30 - Found credentials in shared credentials file: ~/.aws/credentials
+2024-12-01 16:03:34 - Program started with s3_path=s3://tdouglas-data-prod-useast2/data/raw/openpowerlifting/lifter/openpowerlifting-lifter-20241201.zip
+2024-12-01 16:03:34 - Found credentials in shared credentials file: ~/.aws/credentials
+2024-12-01 16:03:39 - Data downloaded from: s3://tdouglas-data-prod-useast2/data/raw/openpowerlifting/lifter/openpowerlifting-lifter-20241201.zip
+2024-12-01 16:03:39 - Data saved to: opl_lifter.zip
+2024-12-01 16:03:39 - Data found at: $archive/openpowerlifting-2024-11-30-a70793a3.csv
+2024-12-01 16:03:39 - Found credentials in shared credentials file: ~/.aws/credentials
+2024-12-01 16:03:41 - File already exists on S3.
+2024-12-01 16:03:41 - Program ended after finding an S3 object at s3://tdouglas-data-prod-useast2/data/raw/openpowerlifting/lifter/csv/openpowerlifting-2024-11-30-a70793a3.csv
