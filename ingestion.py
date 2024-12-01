@@ -33,7 +33,7 @@ def upload_to_s3(filename: str, s3_path: str, overwrite=False) -> None:
 
 def main() -> None:
     logging.basicConfig(
-        filename="openpowerlifting_lifter_ingestion_logfile.log",
+        filename="ingestion.log",
         level=logging.INFO,
         format="%(asctime)s - %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",

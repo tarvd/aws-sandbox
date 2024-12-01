@@ -1,5 +1,0 @@
-2024-12-01 16:11:43 - Program starting with s3_path=s3://tdouglas-data-prod-useast2/data/raw/openpowerlifting/lifter
-2024-12-01 16:11:43 - Found credentials in shared credentials file: ~/.aws/credentials
-2024-12-01 16:11:44 - Found credentials in shared credentials file: ~/.aws/credentials
-2024-12-01 16:11:45 - Found 1 duplicates in path
-2024-12-01 16:11:45 - Duplicate: s3://tdouglas-data-prod-useast2/data/raw/openpowerlifting/lifter/openpowerlifting-lifter-20241130.zip

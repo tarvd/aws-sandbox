@@ -41,7 +41,7 @@ def print_duplicates(duplicate_list: list[str]) -> None:
 
 def main() -> None:
     logging.basicConfig(
-        filename="openpowerlifting_lifter_prune_zip_logfile.log",
+        filename="prune_duplicates.log",
         level=logging.INFO,
         format="%(asctime)s - %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",

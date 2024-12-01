@@ -54,7 +54,7 @@ def extract_and_upload_csv_from_zip(filename: str, s3_path: str) -> None:
 
 def main() -> None:
     logging.basicConfig(
-        filename="openpowerlifting_lifter_extraction_logfile.log",
+        filename="extract_from_archive.log",
         level=logging.INFO,
         format="%(asctime)s - %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
