@@ -20,7 +20,7 @@ def download_file_from_s3(s3_path: str, filename: str) -> None:
 def find_last_modified_file_in_s3(s3_path: str) -> str:
     files = wr.s3.list_objects(s3_path, suffix="zip")
     descriptions = wr.s3.describe_objects(
-        "s3://tdouglas-data-prod-useast2/data/raw/openpowerlifting/lifter"
+        s3_path
     )
     last_modified_at_dict = {
         file: pd.to_datetime(
@@ -35,9 +35,9 @@ def find_last_modified_file_in_s3(s3_path: str) -> str:
 def extract_and_upload_csv_from_zip(filename: str, s3_path: str) -> None:
     with ZipFile(filename, "r") as z:
         # Find the data file in the archive
-        data_archive_path = os.path.basename([
+        data_archive_path = [
             x for x in z.namelist() if os.path.splitext(x)[-1] == ".csv"
-        ][0])
+        ][0]
         data_archive_file = os.path.basename(data_archive_path)
         s3_csv_path = f"{s3_path}/{data_archive_file}"
         logging.info(f"Data found at: $archive/{data_archive_path}")
@@ -54,13 +54,13 @@ def extract_and_upload_csv_from_zip(filename: str, s3_path: str) -> None:
 
 def main() -> None:
     logging.basicConfig(
-        filename="extract_from_archive.log",
+        filename=os.path.join("log","extract_file_from_archive.log"),
         level=logging.INFO,
         format="%(asctime)s - %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
     )
 
-    s3_zip_dir = "s3://tdouglas-data-prod-useast2/data/raw/openpowerlifting/lifter"
+    s3_zip_dir = "s3://tdouglas-data-prod-useast2/data/raw/openpowerlifting/lifter/zip"
     filename = "opl_lifter.zip"
     s3_csv_dir = "s3://tdouglas-data-prod-useast2/data/raw/openpowerlifting/lifter/csv"
     

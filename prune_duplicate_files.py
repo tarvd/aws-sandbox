@@ -1,3 +1,4 @@
+import os
 import logging
 
 import awswrangler as wr
@@ -41,7 +42,7 @@ def print_duplicates(duplicate_list: list[str]) -> None:
 
 def main() -> None:
     logging.basicConfig(
-        filename="prune_duplicates.log",
+        filename=os.path.join("log","prune_duplicate_files.log"),
         level=logging.INFO,
         format="%(asctime)s - %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
