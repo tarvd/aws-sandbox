@@ -12,5 +12,6 @@ wheels/
 # Data
 *.zip
 
-# Logs
+# Logs, Analysis
 log/
+analysis/
