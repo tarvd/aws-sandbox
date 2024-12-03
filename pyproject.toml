@@ -6,6 +6,8 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "awswrangler>=3.10.0",
+    "fsspec>=2024.10.0",
     "requests>=2.32.3",
     "ruff>=0.8.1",
+    "s3fs>=2024.10.0",
 ]
