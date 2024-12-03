@@ -135,9 +135,6 @@ def main() -> None:
         ctas_table="lifter_with_id",  # New table name
         ctas_database="temp",  # Target database for the new table
     )
-    print(result)
-    print(result.keys())
-
 
 if __name__ == "__main__":
     main()

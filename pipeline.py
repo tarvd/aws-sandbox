@@ -75,8 +75,8 @@ def find_last_modified_file_in_s3(s3_path: str, suffix: str) -> str:
     return max(last_modified_at_dict, key=last_modified_at_dict.get)
 
 
-def find_duplicate_zips_in_s3(s3_path: str, suffix: str = "zip") -> None:
-    logging.info(f"Program starting with s3_path={s3_path}")
+def find_duplicate_files_in_s3(s3_path: str, suffix: str = "zip") -> None:
+    logging.info(f"Program starting with s3_path={s3_path} and suffix={suffix}")
     files = wr.s3.list_objects(s3_path, suffix=suffix)
     descriptions = wr.s3.describe_objects(s3_path)
     s3_data = pd.DataFrame(
@@ -125,18 +125,9 @@ def extract_and_upload_csv_from_zip(
         logging.info(f"Data found at: $file/{data_archive_path}")
 
         # Extract the csv from the zip and upload to S3
-        if wr.s3.does_object_exist(csv_s3_path):
-            logging.info(f"Extracted file already exists on S3.")
-            logging.info(
-                f"Extraction upload ended after finding an S3 object at {csv_s3_path}"
-            )
-        else:
-            with z.open(data_archive_path, "r") as csv_in_zip:
-                wr.s3.upload(csv_in_zip, csv_s3_path)
-            logging.info(f"Extraction data uploaded to: {csv_s3_path}")
-    if cleanup:
-        logging.info(f"Cleaning up local file {filename}")
-        os.remove(filename)
+        with z.open(data_archive_path, "r") as csv_in_zip:
+            upload_file_to_s3(csv_in_zip, csv_s3_path, overwrite=False, cleanup=False)
+    os.remove(filename)
     return csv_s3_path
 
 
@@ -166,10 +157,11 @@ def create_iceberg_from_df(
         temp_path=temp_path,
     )
     if cleanup:
+        logging.info(f"Cleaning up files at {temp_path}")
         wr.s3.delete_objects(temp_path[:-1])
 
 
-def add_raw_data_to_iceberg(
+def add_data_to_iceberg(
     database: str, table: str, csv_s3_path: str, table_location: str, temp_path: str
 ) -> None:
     csv_created_date = (
@@ -219,8 +211,6 @@ def main() -> None:
 
     data_filename = f"{database}-{table}-{pd.Timestamp.now().strftime('%Y%m%d')}.zip"
     data_s3_dir = f"s3://tdouglas-data-prod-useast2/data/raw/{database}/{table}/zip"
-    data_s3_path = f"{data_s3_dir}/{data_filename}"
-    temp_zip_filename = f"{database}-{table}.zip"
     csv_s3_dir = f"s3://tdouglas-data-prod-useast2/data/raw/{database}/{table}/csv"
     table_location = (
         f"s3://tdouglas-data-prod-useast2/data/raw/{database}/{table}/iceberg/"
@@ -228,16 +218,12 @@ def main() -> None:
 
     logging.info("-- DOWNLOAD ZIP FROM HTTPS --")
     download_file_from_url(data_url, data_filename)
-    logging.info("-- UPLOAD ZIP TO S3 --")
-    upload_file_to_s3(data_filename, data_s3_path)
-    logging.info("-- DOWNLOAD ZIP FROM S3 --")
-    download_file_from_s3(data_s3_path, temp_zip_filename)
     logging.info("-- EXTRACT CSV FROM ZIP AND UPLOAD TO S3 --")
-    csv_s3_path = extract_and_upload_csv_from_zip(temp_zip_filename, csv_s3_dir)
-    logging.info("-- CREATE TEMP TABLE -")
-    add_raw_data_to_iceberg(temp_database, table, csv_s3_path, table_location, temp_path)
+    csv_s3_path = extract_and_upload_csv_from_zip(data_filename, csv_s3_dir)
+    # logging.info("-- CREATE TEMP TABLE -")
+    # add_data_to_iceberg(temp_database, table, csv_s3_path, table_location, temp_path)
     # logging.info("-- ATTEMPT DATA INSERT INTO ICEBERG ON S3 --")
-    # add_raw_data_to_iceberg(database, table, csv_s3_path, table_location, temp_path)
+    # add_data_to_iceberg(database, table, csv_s3_path, table_location, temp_path)
 
 
 if __name__ == "__main__":
