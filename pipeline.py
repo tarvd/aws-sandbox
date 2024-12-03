@@ -7,13 +7,13 @@ import awswrangler as wr
 import pandas as pd
 
 # Ideals to stick to:
-# 1. The pipeline is idempotent. It can be run multiple times without affecting the dataset adversely.
-# F(X) = X', F(X') = X'
-# 2. The pipeline is self-cleaning. Delete temporary files after done with them, unless in a lambda instance.
-# 3. The pipeline contains logging. A user should be able to read the log file to step through exactly what happened.
-# 4. The pipeline attempt to minimize memory usage when possible.
-# 5.
-
+# 1. The pipeline is idempotent. It can be run multiple times without affecting the dataset adversely: F(X) = X', F(X') = X'
+# 2. The pipeline attempt to minimize memory usage whenever possible.
+# 3. The pipeline is self-cleaning. Delete temporary files after done with them, unless in a lambda instance.
+# 4. The pipeline contains logging. A user should be able to read the log file to step through exactly what happened.
+# 5. Currently, past the initial ingestion, pandas is only used to automatically infer schema. 
+#    If we can infer schema of a csv file on S3 (python library pyiceberg?, S3 service that doesn't suck as much as Glue?), 
+#    we can eliminate this step which takes a lot of Lambda compute)
 
 def download_file_from_url(url: str, filename: str) -> None:
     logging.info(f"Download started with url={url} and filename={filename}")
@@ -210,6 +210,7 @@ def main() -> None:
     logging.info(f"Program start at {pd.Timestamp.now()}")
 
     temp_path = "s3://tdouglas-data-prod-useast2/data/temp/"
+    temp_database = "temp"
     database = "openpowerlifting"
     table = "lifter"
     data_url = (
@@ -233,8 +234,10 @@ def main() -> None:
     download_file_from_s3(data_s3_path, temp_zip_filename)
     logging.info("-- EXTRACT CSV FROM ZIP AND UPLOAD TO S3 --")
     csv_s3_path = extract_and_upload_csv_from_zip(temp_zip_filename, csv_s3_dir)
-    logging.info("-- ATTEMPT DATA INSERT INTO ICEBERG ON S3 --")
-    add_raw_data_to_iceberg(database, table, csv_s3_path, table_location, temp_path)
+    logging.info("-- CREATE TEMP TABLE -")
+    add_raw_data_to_iceberg(temp_database, table, csv_s3_path, table_location, temp_path)
+    # logging.info("-- ATTEMPT DATA INSERT INTO ICEBERG ON S3 --")
+    # add_raw_data_to_iceberg(database, table, csv_s3_path, table_location, temp_path)
 
 
 if __name__ == "__main__":
