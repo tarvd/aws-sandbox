@@ -1,3 +1,10 @@
+create table openpowerlifting.lifter_with_id
+with (table_type = 'ICEBERG',
+      format = 'PARQUET', 
+      location = 's3://tdouglas-data-prod-useast2/data/raw/openpowerlifting/lifter_with_id/iceberg/',
+      is_external= false
+   ) 
+as
 select 
     sha256(
         cast(
@@ -49,4 +56,3 @@ select
     ) as lifter_id,
     *
 from openpowerlifting.lifter
-limit 10

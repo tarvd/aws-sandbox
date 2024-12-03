@@ -1,0 +1,56 @@
+create view openpowerlifting.lifter_dedupe as 
+with t as (
+    select 
+        *,
+        row_number() over (partition by lifter_id) as rownum 
+    from 
+        openpowerlifting.lifter_with_id
+)
+select 
+    lifter_id,
+	name,
+	sex,
+	event,
+	equipment,
+	age,
+	ageclass,
+	birthyearclass,
+	division,
+	bodyweightkg,
+	weightclasskg,
+	squat1kg,
+	squat2kg,
+	squat3kg,
+	squat4kg,
+	best3squatkg,
+	bench1kg,
+	bench2kg,
+	bench3kg,
+	bench4kg,
+	best3benchkg,
+	deadlift1kg,
+	deadlift2kg,
+	deadlift3kg,
+	deadlift4kg,
+	best3deadliftkg,
+	totalkg,
+	place,
+	dots,
+	wilks,
+	glossbrenner,
+	goodlift,
+	tested,
+	country,
+	state,
+	federation,
+	parentfederation,
+	date,
+	meetcountry,
+	meetstate,
+	meettown,
+	meetname,
+	sanctioned
+from 
+	t
+where 
+	rownum = 1

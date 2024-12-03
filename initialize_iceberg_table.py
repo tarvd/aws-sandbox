@@ -7,6 +7,7 @@ import pandas as pd
 
 def read_csv_to_df(s3_path: str) -> pd.DataFrame:
     df = pd.read_csv(s3_path)
+    df["load_at"] = pd.Timestamp.now().strftime('%Y%m%d')
     logging.info(f"Data downloaded from: {s3_path}")
     return df
 
@@ -35,7 +36,6 @@ def initialize_iceberg_table(
     else:
         df = read_csv_to_df(s3_path)
         create_iceberg_from_df(df, database, table, table_location, temp_path)
-        logging.info(f"Iceberg table created: {database}.{table}")
 
 
 def main() -> None:
