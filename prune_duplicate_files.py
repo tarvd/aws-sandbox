@@ -9,7 +9,7 @@ def find_duplicate_zips_in_s3(s3_path: str) -> None:
     logging.info(f"Program starting with s3_path={s3_path}")
     files = wr.s3.list_objects(s3_path, suffix="zip")
     descriptions = wr.s3.describe_objects(
-        "s3://tdouglas-data-prod-useast2/data/raw/openpowerlifting/lifter"
+        s3_path
     )
     s3_data = pd.DataFrame(
         [
@@ -34,10 +34,13 @@ def find_duplicate_zips_in_s3(s3_path: str) -> None:
     logging.info(f"Found {len(duplicate_list)} duplicates in path")
     return duplicate_list
 
-def print_duplicates(duplicate_list: list[str]) -> None:
-    for item in duplicate_list:
-        logging.info(f"Duplicate: {item}")
-        print(item)
+def print_duplicates(duplicate_list: list[str]=None) -> None:
+    if duplicate_list is None or duplicate_list==[]:
+        print("No duplicates found")
+    else:
+        for item in duplicate_list:
+            logging.info(f"Duplicate: {item}")
+            print(item)
 
 
 def main() -> None:
@@ -49,8 +52,8 @@ def main() -> None:
     )
 
     s3_path = "s3://tdouglas-data-prod-useast2/data/raw/openpowerlifting/lifter"
-    duplicate_list = find_duplicate_zips_in_s3(s3_path)
 
+    duplicate_list = find_duplicate_zips_in_s3(s3_path)
     print_duplicates(duplicate_list)
 
 
