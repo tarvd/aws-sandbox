@@ -19,9 +19,7 @@ def download_file_from_s3(s3_path: str, filename: str) -> None:
 
 def find_last_modified_file_in_s3(s3_path: str) -> str:
     files = wr.s3.list_objects(s3_path, suffix="zip")
-    descriptions = wr.s3.describe_objects(
-        s3_path
-    )
+    descriptions = wr.s3.describe_objects(s3_path)
     last_modified_at_dict = {
         file: pd.to_datetime(
             descriptions[file]["ResponseMetadata"]["HTTPHeaders"]["last-modified"],
@@ -54,7 +52,7 @@ def extract_and_upload_csv_from_zip(filename: str, s3_path: str) -> None:
 
 def main() -> None:
     logging.basicConfig(
-        filename=os.path.join("log","extract_file_from_archive.log"),
+        filename=os.path.join("log", "extract_file_from_archive.log"),
         level=logging.INFO,
         format="%(asctime)s - %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
@@ -63,7 +61,7 @@ def main() -> None:
     s3_zip_dir = "s3://tdouglas-data-prod-useast2/data/raw/openpowerlifting/lifter/zip"
     filename = "opl_lifter.zip"
     s3_csv_dir = "s3://tdouglas-data-prod-useast2/data/raw/openpowerlifting/lifter/csv"
-    
+
     s3_zip_path = find_last_modified_file_in_s3(s3_zip_dir)
     download_file_from_s3(s3_zip_path, filename)
     extract_and_upload_csv_from_zip(filename, s3_csv_dir)

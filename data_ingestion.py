@@ -5,7 +5,7 @@ import awswrangler as wr
 import pandas as pd
 
 
-def download_file_from_url(url: str, filename: str) -> None:    
+def download_file_from_url(url: str, filename: str) -> None:
     logging.info(f"Program started with url={url} and filename={filename}")
     try:
         # Get a response from the url
@@ -34,7 +34,7 @@ def upload_to_s3(filename: str, s3_path: str, overwrite=False) -> None:
 
 def main() -> None:
     logging.basicConfig(
-        filename=os.path.join("log","data_ingestion.log"),
+        filename=os.path.join("log", "data_ingestion.log"),
         level=logging.INFO,
         format="%(asctime)s - %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
@@ -42,9 +42,7 @@ def main() -> None:
 
     url = "https://openpowerlifting.gitlab.io/opl-csv/files/openpowerlifting-latest.zip"
     filename = f"openpowerlifting-lifter-{pd.Timestamp.now().strftime('%Y%m%d')}.zip"
-    s3_path = (
-        f"s3://tdouglas-data-prod-useast2/data/raw/openpowerlifting/lifter/zip/{filename}"
-    )
+    s3_path = f"s3://tdouglas-data-prod-useast2/data/raw/openpowerlifting/lifter/zip/{filename}"
 
     download_file_from_url(url, filename)
     upload_to_s3(filename, s3_path)
