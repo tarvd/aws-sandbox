@@ -1,188 +1,154 @@
 import os
 import logging
-import requests
-from zipfile import ZipFile
+import time
 
 import awswrangler as wr
 import pandas as pd
 
-# Ideals to stick to:
-# 1. The pipeline is idempotent. It can be run multiple times without affecting the dataset adversely: F(X) = X', F(X') = X'
-# 2. The pipeline attempt to minimize memory usage whenever possible.
-# 3. The pipeline is self-cleaning. Delete temporary files after done with them, unless in a lambda instance.
-# 4. The pipeline contains logging. A user should be able to read the log file to step through exactly what happened.
-# 5. Currently, past the initial ingestion, pandas is only used to automatically infer schema. 
-#    If we can infer schema of a csv file on S3 (python library pyiceberg?, S3 service that doesn't suck as much as Glue?), 
-#    we can eliminate this step which takes a lot of Lambda compute)
 
-
-
-# def download_file_from_s3(s3_path: str, filename: str) -> None:
-#     logging.info(f"Download started with s3_path={s3_path}")
-#     try:
-#         # Download zip file from S3
-#         wr.s3.download(s3_path, filename)
-#         logging.info(f"File downloaded from: {s3_path}")
-#         logging.info(f"File saved to: {filename}")
-#     except Exception as e:
-#         logging.info(f"An error occurred when connecting to S3: {e}")
-
-
-# def find_last_modified_file_in_s3(s3_path: str, suffix: str) -> str:
-#     files = wr.s3.list_objects(s3_path, suffix=suffix)
-#     descriptions = wr.s3.describe_objects(s3_path)
-#     last_modified_at_dict = {
-#         file: pd.to_datetime(
-#             descriptions[file]["ResponseMetadata"]["HTTPHeaders"]["last-modified"],
-#             format="%a, %d %b %Y %H:%M:%S %Z",
-#         )
-#         for file in files
-#     }
-#     return max(last_modified_at_dict, key=last_modified_at_dict.get)
-
-
-# def find_duplicate_files_in_s3(s3_path: str, suffix: str = "zip") -> None:
-#     logging.info(f"Program starting with s3_path={s3_path} and suffix={suffix}")
-#     files = wr.s3.list_objects(s3_path, suffix=suffix)
-#     descriptions = wr.s3.describe_objects(s3_path)
-#     s3_data = pd.DataFrame(
-#         [
-#             {
-#                 "id": file,
-#                 "last_modified_at": pd.to_datetime(
-#                     descriptions[file]["ResponseMetadata"]["HTTPHeaders"][
-#                         "last-modified"
-#                     ],
-#                     format="%a, %d %b %Y %H:%M:%S %Z",
-#                 ),
-#                 "etag": descriptions[file]["ResponseMetadata"]["HTTPHeaders"]["etag"],
-#             }
-#             for file in files
-#         ]
-#     )
-#     keep_id = (
-#         s3_data.groupby("etag", as_index=True)["last_modified_at"].max().to_frame()
-#     )
-#     keep_data = s3_data[s3_data["last_modified_at"].isin(keep_id["last_modified_at"])]
-#     duplicate_list = s3_data[~(s3_data["id"].isin(keep_data["id"]))]["id"].tolist()
-#     logging.info(f"Found {len(duplicate_list)} duplicates in path")
-#     return duplicate_list
-
-
-# def print_duplicates(duplicate_list: list[str] = None) -> None:
-#     if duplicate_list is None or duplicate_list == []:
-#         print("No duplicates found")
-#     else:
-#         for item in duplicate_list:
-#             logging.info(f"Duplicate: {item}")
-#             print(item)
-
-
-# def extract_and_upload_csv_from_zip(
-#     filename: str, s3_path: str, cleanup: bool = True
-# ) -> str:
-#     with ZipFile(filename, "r") as z:
-#         # Find the data file in the archive
-#         data_archive_path = [
-#             x for x in z.namelist() if os.path.splitext(x)[-1] == ".csv"
-#         ][0]
-#         data_archive_file = os.path.basename(data_archive_path)
-#         csv_s3_path = f"{s3_path}/{data_archive_file}"
-#         logging.info(f"Data found at: $file/{data_archive_path}")
-
-#         # Extract the csv from the zip and upload to S3
-#         with z.open(data_archive_path, "r") as csv_in_zip:
-#             upload_file_to_s3(csv_in_zip, csv_s3_path, overwrite=False, cleanup=False)
-#     os.remove(filename)
-#     return csv_s3_path
-
-
-# def read_csv_to_df(s3_path: str) -> pd.DataFrame:
-#     csv_created_date = (
-#         s3_path.split("/")[-1].replace("openpowerlifting-", "")[:10].replace("-", "")
-#     )
-#     df = pd.read_csv(s3_path)
-#     df["load_at"] = csv_created_date
-#     logging.info(f"Dataframe formed from: {s3_path}")
-#     return df
-
-
-# def create_iceberg_from_df(
-#     df: pd.DataFrame,
-#     database: str,
-#     table: str,
-#     table_location: str,
-#     temp_path: str,
-#     cleanup: bool = True,
-# ) -> None:
-#     wr.athena.to_iceberg(
-#         df=df,
-#         database=database,
-#         table=table,
-#         table_location=table_location,
-#         temp_path=temp_path,
-#     )
-#     if cleanup:
-#         logging.info(f"Cleaning up files at {temp_path}")
-#         wr.s3.delete_objects(temp_path[:-1])
-
-
-# def add_data_to_iceberg(
-#     database: str, table: str, csv_s3_path: str, table_location: str, temp_path: str
-# ) -> None:
-#     csv_created_date = (
-#         csv_s3_path.split("/")[-1]
-#         .replace("openpowerlifting-", "")[:10]
-#         .replace("-", "")
-#     )
-#     if wr.catalog.does_table_exist(database, table):
-#         logging.info(f"Glue catalog table found: {database}.{table}")
-#         iceberg_last_load_at = wr.athena.read_sql_query(
-#             sql=f"select max(load_at) as last_load_at from {database}.{table}",
-#             database=database,
-#             ctas_approach=False,
-#         )["last_load_at"][0]
-#         if csv_created_date > iceberg_last_load_at:
-#             logging.info(f"Uploading {csv_created_date} data")
-#             df = read_csv_to_df(csv_s3_path)
-#             create_iceberg_from_df(df, database, table, None, temp_path)
-#             logging.info(f"Data inserted into {database}.{table}")
-#         else:
-#             logging.info(
-#                 f"{database}.{table} contains most recent data of {csv_created_date}, upload aborted."
-#             )
-#     else:
-#         logging.info(f"Creating Iceberg table with {csv_created_date} data")
-#         df = read_csv_to_df(csv_s3_path)
-#         create_iceberg_from_df(df, database, table, table_location, temp_path)
-#         logging.info(f"Iceberg table created: {database}.{table}")
-
-
-def main() -> None:
+def init_logging() -> None:
     logging.basicConfig(
         filename=os.path.join("log", "pipeline.log"),
         level=logging.INFO,
         format="%(asctime)s - %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
     )
+
+        
+def infer_schema(csv_s3_path: str) -> dict:
+    logging.info(f"Inferring schema of file: {csv_s3_path}")
+    df = wr.s3.read_csv(csv_s3_path, nrows=10000)
+    schema_dict = (
+        df.dtypes.copy()
+        .replace("object", "string")
+        .replace("float64", "float")
+        .replace("int64", "int")
+        .to_dict()
+    )
+    logging.info(f"Schema inferred for file with {len(schema_dict)} columns")
+    return schema_dict
+
+
+def create_iceberg_ddl(
+        database: str, 
+        table: str, 
+        schema_dict: dict, 
+        s3_iceberg_location: str
+    ) -> str:
+    logging.info(f"Constructing Athena SQL to create Iceberg table: {database}.{table} at {s3_iceberg_location}")
+    columns_str = ",\n\t\t".join([f"{col[0]} {col[1]}" for col in schema_dict.items()])
+    ddl_str = f"""
+    CREATE TABLE IF NOT EXISTS {database}.{table} (
+        {columns_str}
+    ) 
+    LOCATION '{s3_iceberg_location}' 
+    TBLPROPERTIES (
+    'table_type'='ICEBERG',
+    'format'='parquet',
+    'write_compression'='snappy',
+    'optimize_rewrite_delete_file_threshold'='10'
+    );
+    """
+    return ddl_str
+
+
+def create_csv_ddl(
+        database: str, 
+        table: str, 
+        schema_dict: dict, 
+        s3_csv_location: str
+    ) -> str:
+    logging.info(f"Constructing Athena SQL to create CSV table: {database}.{table} at {s3_csv_location}")
+    columns_str = ",\n\t\t".join([f"{col[0]} {col[1]}" for col in schema_dict.items()])
+    ddl = f"""
+    CREATE EXTERNAL TABLE IF NOT EXISTS {database}.{table} (
+        {columns_str}
+    )
+    ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe'
+    WITH SERDEPROPERTIES ('field.delim' = ',')
+    LOCATION '{s3_csv_location}';
+    """
+    return ddl
+
+
+def drop_csv_ddl(
+        database: str, 
+        table: str
+    ) -> str:
+    logging.info(f"Creating Athena SQL to drop CSV table: {database}.{table}")    
+    ddl = f"""
+    DROP TABLE {database}.{table} 
+    """
+    return ddl
+
+
+def create_iceberg_insert(
+        iceberg_database: str, 
+        iceberg_table: str, 
+        data_database: str, 
+        data_table: str
+    ) -> str:
+    logging.info(f"Constructing Athena SQL to insert into Iceberg table: {data_database}.{data_table} into {iceberg_database}.{iceberg_table}")
+    dml = f"""
+        INSERT INTO {iceberg_database}.{iceberg_table} 
+        WITH t_latest_date as (
+            SELECT coalesce(max(sourcerecorddate),19000101) AS last_load_date
+            FROM {iceberg_database}.{iceberg_table}
+        )
+        SELECT ti.* 
+        FROM {data_database}.{data_table} ti, t_latest_date
+        WHERE ti.sourcerecorddate > t_latest_date.last_load_date
+    """
+    return dml
+
+
+def run_athena_query(ddl_sql: str):
+    logging.info(f"Running Athena query")
+    query_execution_id = wr.athena.start_query_execution(ddl_sql)
+    logging.info(f"Query started with id: {query_execution_id}")
+    loop_condition = True
+    while loop_condition:
+        time.sleep(2)
+        status = wr.athena.get_query_execution(query_execution_id)["Status"]
+        logging.info(f"Query status: {status['State']}")
+        if status["State"] in ("SUCCEEDED", "FAILED", "CANCELLED"):
+            loop_condition = False
+        if status["State"] == "FAILED":
+            logging.info(str(status))
+    logging.info(f"Query execution ended with status: {status['State']}")
+    return status
+
+
+def main() -> None:
+    init_logging()
     logging.info(f"Load started at {pd.Timestamp.now()}")
+
     database = "openpowerlifting"
-    table = "lifter"
+    csv_table_name = "lifter_csv"
+    iceberg_table_name = "lifter_iceberg"
+    csv_file = "s3://tdouglas-data-prod-useast2/data/raw/openpowerlifting/lifter/csv/"
+    iceberg_s3_dir = "s3://tdouglas-data-prod-useast2/data/raw/openpowerlifting/lifter/iceberg/"
 
-    csv_s3_dir = f"s3://tdouglas-data-prod-useast2/data/raw/{database}/{table}/csv"
+    logging.info(f"-- INFERRING DATA SCHEMA FROM CSV --")
+    schema_dict = infer_schema(csv_file)
 
-    # temp_path = "s3://tdouglas-data-prod-useast2/data/temp/"
-    # temp_database = "temp"
-    # data_s3_dir = f"s3://tdouglas-data-prod-useast2/data/raw/{database}/{table}/zip"
-    # table_location = (
-    #     f"s3://tdouglas-data-prod-useast2/data/raw/{database}/{table}/iceberg/"
-    # )
+    if not wr.catalog.does_table_exist(database, csv_table_name):
+        logging.info(f"-- CREATING CSV EXTERNAL TABLE --")
+        csv_ddl = create_csv_ddl(database, csv_table_name, schema_dict, csv_file)
+        run_athena_query(csv_ddl)
+
+    if not wr.catalog.does_table_exist(database, iceberg_table_name):
+        logging.info(f"-- CREATING ICEBERG TABLE --")
+        iceberg_ddl = create_iceberg_ddl(database, iceberg_table_name, schema_dict, iceberg_s3_dir)
+        run_athena_query(iceberg_ddl)
     
-    y = wr.s3.describe_objects(csv_s3_dir)
-    z = pd.DataFrame([pd.to_datetime(y[key]["ResponseMetadata"]["HTTPHeaders"]["last-modified"], format='%a, %d %b %Y %H:%M:%S %Z') for key in y], index=y.keys())
-    print(z)
+    logging.info(f"-- INSERTING DATA INTO ICEBERG TABLE --")
+    iceberg_dml = create_iceberg_insert(database, iceberg_table_name, database, csv_table_name)
+    run_athena_query(iceberg_dml)
+    logging.info(f"Iceberg table updated")
 
     logging.info(f"Load ended at {pd.Timestamp.now()}")
+
 
 if __name__ == "__main__":
     main()

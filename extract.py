@@ -6,14 +6,14 @@ from zipfile import ZipFile
 import awswrangler as wr
 import pandas as pd
 
-# Ideals to stick to:
-# 1. The pipeline is idempotent. It can be run multiple times without affecting the dataset adversely: F(X) = X', F(X') = X'
-# 2. The pipeline attempt to minimize memory usage whenever possible.
-# 3. The pipeline is self-cleaning. Delete temporary files after done with them, unless in a lambda instance.
-# 4. The pipeline contains logging. A user should be able to read the log file to step through exactly what happened.
-# 5. Currently, past the initial ingestion, pandas is only used to automatically infer schema.
-#    If we can infer schema of a csv file on S3 (python library pyiceberg?, S3 service that doesn't suck as much as Glue?),
-#    we can eliminate this step which takes a lot of Lambda compute)
+
+def init_logging() -> None:
+    logging.basicConfig(
+        filename=os.path.join("log", "pipeline.log"),
+        level=logging.INFO,
+        format="%(asctime)s - %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
 
 
 def download_file_from_url(url: str, filename: str) -> None:
@@ -41,6 +41,7 @@ def upload_file_to_s3(filename: str, s3_path: str, overwrite: bool = False) -> N
     elif wr.s3.does_object_exist(s3_path) and overwrite:
         logging.info(f"Overwriting existing file on S3.")
         wr.s3.upload(filename, s3_path)
+
         logging.info(f"File uploaded, overwriting {s3_path}")
     else:
         logging.info(f"Upload started to s3_path={s3_path}")
@@ -66,28 +67,37 @@ def extract_and_upload_csv_from_zip(
     return csv_s3_path
 
 
-def main() -> None:
-    logging.basicConfig(
-        filename=os.path.join("log", "pipeline.log"),
-        level=logging.INFO,
-        format="%(asctime)s - %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-    )
-    logging.info(f"Extract started at {pd.Timestamp.now()}")
+def enrich_csv(csv_s3_path: str) -> None:
+    logging.info(f"Data to enrich: {csv_s3_path}")
+    df = wr.s3.read_csv(csv_s3_path)
+    df["filename"] = csv_s3_path.split("/")[-1]
+    df["sourcerecorddate"] = pd.Timestamp.now().strftime("%Y%m%d")
+    wr.s3.to_csv(df, csv_s3_path, index=False)
+    logging.info(f"Enriched data uploaded to: {csv_s3_path}")
+    return None
 
+
+def main() -> None:
+    init_logging()
+    logging.info(f"Extract started at {pd.Timestamp.now()}")
+    
     database = "openpowerlifting"
     table = "lifter"
     data_url = (
         "https://openpowerlifting.gitlab.io/opl-csv/files/openpowerlifting-latest.zip"
     )
-
     data_filename = f"{database}-{table}-{pd.Timestamp.now().strftime('%Y%m%d')}.zip"
     csv_s3_dir = f"s3://tdouglas-data-prod-useast2/data/raw/{database}/{table}/csv"
 
-    logging.info("-- DOWNLOAD ZIP FROM HTTPS --")
+    logging.info("-- DOWNLOADING ZIP FROM HTTPS --")
     download_file_from_url(data_url, data_filename)
-    logging.info("-- EXTRACT CSV FROM ZIP AND UPLOAD TO S3 --")
-    extract_and_upload_csv_from_zip(data_filename, csv_s3_dir)
+
+    logging.info("-- EXTRACTING CSV FROM ZIP AND UPLOADING TO S3 --")
+    csv_s3_path = extract_and_upload_csv_from_zip(data_filename, csv_s3_dir)
+
+    logging.info("-- ENRICHING CSV WITH METADATA --")
+    enrich_csv(csv_s3_path)
+
     logging.info(f"Extract ended at {pd.Timestamp.now()}")
 
 
