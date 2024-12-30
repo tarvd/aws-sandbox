@@ -124,26 +124,26 @@ def main() -> None:
     logging.info(f"Load started at {pd.Timestamp.now()}")
 
     database = "openpowerlifting"
-    csv_table_name = "lifter_csv"
-    iceberg_table_name = "lifter_iceberg"
+    csv_table = "lifter_csv"
+    iceberg_table = "lifter_iceberg"
     csv_file = "s3://tdouglas-data-prod-useast2/data/raw/openpowerlifting/lifter/csv/"
     iceberg_s3_dir = "s3://tdouglas-data-prod-useast2/data/raw/openpowerlifting/lifter/iceberg/"
 
     logging.info(f"-- INFERRING DATA SCHEMA FROM CSV --")
     schema_dict = infer_schema(csv_file)
 
-    if not wr.catalog.does_table_exist(database, csv_table_name):
+    if not wr.catalog.does_table_exist(database, csv_table):
         logging.info(f"-- CREATING CSV EXTERNAL TABLE --")
-        csv_ddl = create_csv_ddl(database, csv_table_name, schema_dict, csv_file)
+        csv_ddl = create_csv_ddl(database, csv_table, schema_dict, csv_file)
         run_athena_query(csv_ddl)
 
-    if not wr.catalog.does_table_exist(database, iceberg_table_name):
+    if not wr.catalog.does_table_exist(database, iceberg_table):
         logging.info(f"-- CREATING ICEBERG TABLE --")
-        iceberg_ddl = create_iceberg_ddl(database, iceberg_table_name, schema_dict, iceberg_s3_dir)
+        iceberg_ddl = create_iceberg_ddl(database, iceberg_table, schema_dict, iceberg_s3_dir)
         run_athena_query(iceberg_ddl)
     
     logging.info(f"-- INSERTING DATA INTO ICEBERG TABLE --")
-    iceberg_dml = create_iceberg_insert(database, iceberg_table_name, database, csv_table_name)
+    iceberg_dml = create_iceberg_insert(database, iceberg_table, database, csv_table)
     run_athena_query(iceberg_dml)
     logging.info(f"Iceberg table updated")
 
