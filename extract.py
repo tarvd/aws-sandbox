@@ -1,11 +1,11 @@
 import os
+import time
 import logging
 import requests
 import json
 from zipfile import ZipFile
 
 import awswrangler as wr
-import pandas as pd
 
 
 def init_logging() -> None:
@@ -68,7 +68,7 @@ def extract_and_upload_csv_from_zip(
         # Extract the csv from the zip and upload to S3
         with z.open(data_archive_path, "r") as csv_in_zip:
             upload_file_to_s3(csv_in_zip, csv_s3_path, overwrite=overwrite)
-        upload_at = pd.Timestamp.now().strftime("%Y-%m-%d %H:%M:%S.%f")
+        upload_at = time.strftime("%Y-%m-%d %H:%M:%S.%f")
         os.remove(filename)
     return (data_archive_file, csv_s3_path, upload_at)
 
@@ -87,21 +87,28 @@ def infer_schema(csv_s3_path: str) -> dict:
     return schema_dict
 
 
-def upload_metadata(csv_filename: str, csv_s3_path: str, csv_upload_at: str, csv_schema_dict: dict, json_s3_path: str, json_filename: str) -> None:
+def upload_metadata(
+    csv_filename: str,
+    csv_s3_path: str,
+    csv_upload_at: str,
+    csv_schema_dict: dict,
+    json_s3_path: str,
+    json_filename: str,
+) -> None:
     logging.info(f"Uploading metadata for {csv_filename}")
     json_to_add = {
         "filename": csv_filename,
         "s3_path": csv_s3_path,
         "upload_at": csv_upload_at,
-        "schema": csv_schema_dict
-        }
-    
+        "schema": csv_schema_dict,
+    }
+
     if not wr.s3.does_object_exist(json_s3_path):
         with open(json_filename, "w") as file:
             json.dump([], file)
     else:
         wr.s3.download(json_s3_path, json_filename)
-    
+
     with open(json_filename, "r") as file:
         metadata = json.load(file)
     metadata.append(json_to_add)
@@ -114,14 +121,14 @@ def upload_metadata(csv_filename: str, csv_s3_path: str, csv_upload_at: str, csv
 
 def main() -> None:
     init_logging()
-    logging.info(f"Extract started at {pd.Timestamp.now()}")
-    
+    logging.info(f"Extract started")
+
     database = "openpowerlifting"
     table = "lifter"
     data_url = (
         "https://openpowerlifting.gitlab.io/opl-csv/files/openpowerlifting-latest.zip"
     )
-    data_filename = f"{database}-{table}-{pd.Timestamp.now().strftime('%Y%m%d')}.zip"
+    data_filename = f"{database}-{table}-{time.strftime('%Y%m%d')}.zip"
     csv_s3_dir = f"s3://tdouglas-data-prod-useast2/data/raw/{database}/{table}"
     json_filename = "metadata.json"
     json_s3_path = f"s3://tdouglas-data-prod-useast2/metadata/raw/{database}/{table}/{json_filename}"
@@ -130,15 +137,24 @@ def main() -> None:
     download_file_from_url(data_url, data_filename)
 
     logging.info("-- EXTRACTING CSV FROM ZIP AND UPLOADING TO S3 --")
-    (csv_filename, csv_s3_path, csv_upload_at) = extract_and_upload_csv_from_zip(data_filename, csv_s3_dir)
+    (csv_filename, csv_s3_path, csv_upload_at) = extract_and_upload_csv_from_zip(
+        data_filename, csv_s3_dir
+    )
 
     logging.info("-- INFERRING DATA SCHEMA FROM CSV FILE --")
     csv_schema_dict = infer_schema(csv_s3_path)
 
     logging.info("-- UPLOADING FILE EXTRACTION METADATA --")
-    upload_metadata(csv_filename, csv_s3_path, csv_upload_at, csv_schema_dict, json_s3_path, json_filename)    
+    upload_metadata(
+        csv_filename,
+        csv_s3_path,
+        csv_upload_at,
+        csv_schema_dict,
+        json_s3_path,
+        json_filename,
+    )
 
-    logging.info(f"Extract ended at {pd.Timestamp.now()}")
+    logging.info(f"Extract ended")
 
 
 if __name__ == "__main__":

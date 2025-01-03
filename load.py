@@ -23,7 +23,11 @@ def get_schema(metadata_s3_path: str) -> dict:
     with open(metadata_filename, "r") as file:
         metadata = json.load(file)
     last_upload_time = max([item[1]["upload_at"] for item in metadata.items()])
-    schema = [item[1]["schema"] for item in metadata.items() if item[1]["upload_at"] == last_upload_time][0]
+    schema = [
+        item[1]["schema"]
+        for item in metadata.items()
+        if item[1]["upload_at"] == last_upload_time
+    ][0]
     return schema
 
 
@@ -156,7 +160,7 @@ def main() -> None:
 
     if not wr.catalog.does_table_exist(curated_database, curated_table):
         logging.info(f"-- CREATING ICEBERG TABLE --")
-        schema_dict.update({"source_record_date":"date"})
+        schema_dict.update({"source_record_date": "date"})
         iceberg_ddl = create_iceberg_ddl(
             curated_database, curated_table, schema_dict, curated_dir
         )
