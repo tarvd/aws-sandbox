@@ -1,11 +1,11 @@
 import os
-import time
 import logging
 import requests
 import json
+from datetime import datetime
 from zipfile import ZipFile
 
-import awswrangler as wr
+from awswrangler import s3
 
 
 def init_logging() -> None:
@@ -36,18 +36,26 @@ def download_file_from_url(url: str, filename: str) -> None:
 
 def upload_file_to_s3(filename: str, s3_path: str, overwrite: bool = False) -> None:
     # Upload to file to S3, choosing to overwrite or not
-    if wr.s3.does_object_exist(s3_path) and not overwrite:
-        logging.info(f"File already exists on S3.")
-        logging.info(f"Upload aborted after finding an S3 object at {s3_path}")
-    elif wr.s3.does_object_exist(s3_path) and overwrite:
-        logging.info(f"Overwriting existing file on S3.")
-        wr.s3.upload(filename, s3_path)
+    try:
+        if s3.does_object_exist(s3_path) and not overwrite:
+            logging.info(f"File already exists on S3.")
+            logging.info(f"Upload aborted after finding an S3 object at {s3_path}")
+            upload_status = "Abort"
+        elif s3.does_object_exist(s3_path) and overwrite:
+            logging.info(f"Overwriting existing file on S3.")
+            s3.upload(filename, s3_path)
+            logging.info(f"File uploaded, overwriting {s3_path}")
+            upload_status = "Success"
+        else:
+            logging.info(f"Upload started to s3_path={s3_path}")
+            s3.upload(filename, s3_path)
+            logging.info(f"File upload complete.")
+            upload_status = "Success"
+    except Exception as e:
+        logging.info(f"File upload failed, reason: {e}")
+        upload_status = "Failure"
+    return upload_status
 
-        logging.info(f"File uploaded, overwriting {s3_path}")
-    else:
-        logging.info(f"Upload started to s3_path={s3_path}")
-        wr.s3.upload(filename, s3_path)
-        logging.info(f"File upload complete.")
 
 
 def extract_and_upload_csv_from_zip(
@@ -67,15 +75,14 @@ def extract_and_upload_csv_from_zip(
 
         # Extract the csv from the zip and upload to S3
         with z.open(data_archive_path, "r") as csv_in_zip:
-            upload_file_to_s3(csv_in_zip, csv_s3_path, overwrite=overwrite)
-        upload_at = time.strftime("%Y-%m-%d %H:%M:%S.%f")
-        os.remove(filename)
-    return (data_archive_file, csv_s3_path, upload_at)
+            upload_status = upload_file_to_s3(csv_in_zip, csv_s3_path, overwrite=overwrite)
+        upload_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
+    return (data_archive_file, csv_s3_path, upload_at, upload_status)
 
 
 def infer_schema(csv_s3_path: str) -> dict:
     logging.info(f"Inferring schema of file: {csv_s3_path}")
-    df = wr.s3.read_csv(csv_s3_path, nrows=10000)
+    df = s3.read_csv(csv_s3_path, nrows=10000)
     schema_dict = (
         df.dtypes.copy()
         .replace("object", "string")
@@ -103,11 +110,11 @@ def upload_metadata(
         "schema": csv_schema_dict,
     }
 
-    if not wr.s3.does_object_exist(json_s3_path):
+    if not s3.does_object_exist(json_s3_path):
         with open(json_filename, "w") as file:
             json.dump([], file)
     else:
-        wr.s3.download(json_s3_path, json_filename)
+        s3.download(json_s3_path, json_filename)
 
     with open(json_filename, "r") as file:
         metadata = json.load(file)
@@ -120,40 +127,44 @@ def upload_metadata(
 
 
 def main() -> None:
+    # Logging
     init_logging()
     logging.info(f"Extract started")
 
-    database = "openpowerlifting"
-    table = "lifter"
+    # Constants
     data_url = (
         "https://openpowerlifting.gitlab.io/opl-csv/files/openpowerlifting-latest.zip"
     )
-    data_filename = f"{database}-{table}-{time.strftime('%Y%m%d')}.zip"
-    csv_s3_dir = f"s3://tdouglas-data-prod-useast2/data/raw/{database}/{table}"
+    data_filename = "data.zip"
+    csv_s3_dir = f"s3://tdouglas-data-prod-useast2/data/raw/openpowerlifting/lifter"
     json_filename = "metadata.json"
-    json_s3_path = f"s3://tdouglas-data-prod-useast2/metadata/raw/{database}/{table}/{json_filename}"
+    json_s3_path = f"s3://tdouglas-data-prod-useast2/metadata/raw/openpowerlifting/lifter/metadata.json"
 
+    # Extraction
     logging.info("-- DOWNLOADING ZIP FROM HTTPS --")
     download_file_from_url(data_url, data_filename)
 
     logging.info("-- EXTRACTING CSV FROM ZIP AND UPLOADING TO S3 --")
-    (csv_filename, csv_s3_path, csv_upload_at) = extract_and_upload_csv_from_zip(
+    (csv_filename, csv_s3_path, csv_upload_at, upload_status) = extract_and_upload_csv_from_zip(
         data_filename, csv_s3_dir
     )
 
-    logging.info("-- INFERRING DATA SCHEMA FROM CSV FILE --")
-    csv_schema_dict = infer_schema(csv_s3_path)
+    if upload_status == "Success":
+        logging.info("-- INFERRING DATA SCHEMA FROM CSV FILE --")
+        csv_schema_dict = infer_schema(csv_s3_path)
 
-    logging.info("-- UPLOADING FILE EXTRACTION METADATA --")
-    upload_metadata(
-        csv_filename,
-        csv_s3_path,
-        csv_upload_at,
-        csv_schema_dict,
-        json_s3_path,
-        json_filename,
-    )
+        logging.info("-- UPLOADING FILE EXTRACTION METADATA --")
+        upload_metadata(
+            csv_filename,
+            csv_s3_path,
+            csv_upload_at,
+            csv_schema_dict,
+            json_s3_path,
+            json_filename,
+        )
 
+    # Cleanup
+    os.remove(data_filename)
     logging.info(f"Extract ended")
 
 
