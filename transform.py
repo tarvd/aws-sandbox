@@ -14,8 +14,10 @@ def init_logging() -> None:
         datefmt="%Y-%m-%d %H:%M:%S",
     )
 
-        
-def create_curated_ddl(curated_database: str, curated_table: str, raw_database: str, raw_table: str):
+
+def create_curated_ddl(
+    curated_database: str, curated_table: str, raw_database: str, raw_table: str
+):
     return f"""
             CREATE TABLE {curated_database}.{curated_table} AS
             WITH t_latest_date AS (
@@ -26,7 +28,8 @@ def create_curated_ddl(curated_database: str, curated_table: str, raw_database: 
             FROM {raw_database}.{raw_table} rt, t_latest_date
             WHERE rt.sourcerecorddate = t_latest_date.max_date
         """
-        
+
+
 def drop_curated_ddl(curated_database: str, curated_table: str):
     return f"""DROP TABLE {curated_database}.{curated_table}"""
 
@@ -61,9 +64,11 @@ def main() -> None:
         logging.info(f"-- DROPPING TRANSFORMED TABLE --")
         curated_drop = drop_curated_ddl(curated_database, curated_table)
         run_athena_query(curated_drop)
-    
+
     logging.info(f"-- CREATING TRANSFORMED TABLE --")
-    curated_ddl = create_curated_ddl(curated_database, curated_table, raw_database, raw_table)
+    curated_ddl = create_curated_ddl(
+        curated_database, curated_table, raw_database, raw_table
+    )
     run_athena_query(curated_ddl)
 
     logging.info(f"Transform ended at {pd.Timestamp.now()}")

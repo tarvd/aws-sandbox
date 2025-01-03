@@ -58,7 +58,10 @@ def extract_and_upload_csv_from_zip(
             x for x in z.namelist() if os.path.splitext(x)[-1] == ".csv"
         ][0]
         data_archive_file = os.path.basename(data_archive_path)
-        csv_s3_path = f"{s3_path}/{data_archive_file}"
+        year = data_archive_file.split("-")[1]
+        month = data_archive_file.split("-")[2]
+        day = data_archive_file.split("-")[3]
+        csv_s3_path = f"{s3_path}/{year}/{month}/{day}/{data_archive_file}"
         logging.info(f"Data found at: $file/{data_archive_path}")
 
         # Extract the csv from the zip and upload to S3
@@ -80,14 +83,17 @@ def enrich_csv(csv_s3_path: str) -> None:
 def main() -> None:
     init_logging()
     logging.info(f"Extract started at {pd.Timestamp.now()}")
-    
+
     database = "openpowerlifting"
     table = "lifter"
     data_url = (
         "https://openpowerlifting.gitlab.io/opl-csv/files/openpowerlifting-latest.zip"
     )
     data_filename = f"{database}-{table}-{pd.Timestamp.now().strftime('%Y%m%d')}.zip"
-    csv_s3_dir = f"s3://tdouglas-data-prod-useast2/data/raw/{database}/{table}/csv"
+    csv_s3_dir = f"s3://tdouglas-data-prod-useast2/data/raw/{database}/{table}"
+
+    # print(wr.s3.list_directories(csv_s3_dir+"/"))
+    # quit()
 
     logging.info("-- DOWNLOADING ZIP FROM HTTPS --")
     download_file_from_url(data_url, data_filename)
@@ -95,8 +101,8 @@ def main() -> None:
     logging.info("-- EXTRACTING CSV FROM ZIP AND UPLOADING TO S3 --")
     csv_s3_path = extract_and_upload_csv_from_zip(data_filename, csv_s3_dir)
 
-    logging.info("-- ENRICHING CSV WITH METADATA --")
-    enrich_csv(csv_s3_path)
+    # logging.info("-- ENRICHING CSV WITH METADATA --")
+    # enrich_csv(csv_s3_path)
 
     logging.info(f"Extract ended at {pd.Timestamp.now()}")
 
