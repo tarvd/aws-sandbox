@@ -1,6 +1,7 @@
 import os
 import logging
 import time
+import json
 
 import awswrangler as wr
 import pandas as pd
@@ -15,18 +16,15 @@ def init_logging() -> None:
     )
 
 
-def infer_schema(csv_s3_path: str) -> dict:
-    logging.info(f"Inferring schema of file: {csv_s3_path}")
-    df = wr.s3.read_csv(csv_s3_path, nrows=10000)
-    schema_dict = (
-        df.dtypes.copy()
-        .replace("object", "string")
-        .replace("float64", "float")
-        .replace("int64", "int")
-        .to_dict()
-    )
-    logging.info(f"Schema inferred for file with {len(schema_dict)} columns")
-    return schema_dict
+def get_schema(metadata_s3_path: str) -> dict:
+    logging.info(f"Reading schema of file from metadata: {metadata_s3_path}")
+    metadata_filename = "metadata.json"
+    wr.s3.download(metadata_s3_path, metadata_filename)
+    with open(metadata_filename, "r") as file:
+        metadata = json.load(file)
+    last_upload_time = max([item[1]["upload_at"] for item in metadata.items()])
+    schema = [item[1]["schema"] for item in metadata.items() if item[1]["upload_at"] == last_upload_time][0]
+    return schema
 
 
 def create_iceberg_ddl(
@@ -64,7 +62,8 @@ def create_csv_ddl(
     )
     ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe'
     WITH SERDEPROPERTIES ('field.delim' = ',')
-    LOCATION '{s3_csv_location}';
+    LOCATION '{s3_csv_location}'
+    TBLPROPERTIES ("skip.header.line.count" = "1");
     """
     return ddl
 
@@ -105,7 +104,7 @@ def create_iceberg_insert(
         INSERT INTO {iceberg_database}.{iceberg_table} 
         SELECT *
         FROM {data_database}.{data_table}
-        WHERE source_record_date > (SELECT MAX(source_record_date) FROM {iceberg_database}.{iceberg_table})
+        WHERE source_record_date > (SELECT COALESCE(MAX(source_record_date),DATE('1900-01-01')) FROM {iceberg_database}.{iceberg_table})
     """
     return dml
 
@@ -133,15 +132,15 @@ def main() -> None:
 
     raw_database = "openpowerlifting"
     raw_table = "lifter"
-    raw_files = "s3://tdouglas-data-prod-useast2/data/raw/openpowerlifting/lifter/"
+    raw_files = f"s3://tdouglas-data-prod-useast2/data/raw/{raw_database}/{raw_table}/"
+    metadata_s3_path = f"s3://tdouglas-data-prod-useast2/metadata/raw/{raw_database}/{raw_table}/metadata.json"
     raw_view = "v_lifter"
     curated_database = "curated"
     curated_table = "lifter"
     curated_dir = "s3://tdouglas-data-prod-useast2/data/curated/lifter/"
 
     logging.info(f"-- INFERRING DATA SCHEMA FROM CSV --")
-    csv_file = wr.s3.list_objects(raw_files)[0]
-    schema_dict = infer_schema(csv_file)
+    schema_dict = get_schema(metadata_s3_path)
 
     if not wr.catalog.does_table_exist(raw_database, raw_table):
         logging.info(f"-- CREATING CSV EXTERNAL TABLE --")
@@ -157,6 +156,7 @@ def main() -> None:
 
     if not wr.catalog.does_table_exist(curated_database, curated_table):
         logging.info(f"-- CREATING ICEBERG TABLE --")
+        schema_dict.update({"source_record_date":"date"})
         iceberg_ddl = create_iceberg_ddl(
             curated_database, curated_table, schema_dict, curated_dir
         )

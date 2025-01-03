@@ -1,6 +1,7 @@
 import os
 import logging
 import requests
+import json
 from zipfile import ZipFile
 
 import awswrangler as wr
@@ -50,7 +51,7 @@ def upload_file_to_s3(filename: str, s3_path: str, overwrite: bool = False) -> N
 
 
 def extract_and_upload_csv_from_zip(
-    filename: str, s3_path: str, overwrite: bool = False, cleanup: bool = True
+    filename: str, s3_path: str, overwrite: bool = False
 ) -> str:
     with ZipFile(filename, "r") as z:
         # Find the data file in the archive
@@ -67,23 +68,54 @@ def extract_and_upload_csv_from_zip(
         # Extract the csv from the zip and upload to S3
         with z.open(data_archive_path, "r") as csv_in_zip:
             upload_file_to_s3(csv_in_zip, csv_s3_path, overwrite=overwrite)
-    return csv_s3_path
+        upload_at = pd.Timestamp.now().strftime("%Y-%m-%d %H:%M:%S.%f")
+        os.remove(filename)
+    return (data_archive_file, csv_s3_path, upload_at)
 
 
-def enrich_csv(csv_s3_path: str) -> None:
-    logging.info(f"Data to enrich: {csv_s3_path}")
-    df = wr.s3.read_csv(csv_s3_path)
-    df["filename"] = csv_s3_path.split("/")[-1]
-    df["sourcerecorddate"] = pd.Timestamp.now().strftime("%Y%m%d")
-    wr.s3.to_csv(df, csv_s3_path, index=False)
-    logging.info(f"Enriched data uploaded to: {csv_s3_path}")
-    return None
+def infer_schema(csv_s3_path: str) -> dict:
+    logging.info(f"Inferring schema of file: {csv_s3_path}")
+    df = wr.s3.read_csv(csv_s3_path, nrows=10000)
+    schema_dict = (
+        df.dtypes.copy()
+        .replace("object", "string")
+        .replace("float64", "float")
+        .replace("int64", "int")
+        .to_dict()
+    )
+    logging.info(f"Schema inferred for file with {len(schema_dict)} columns")
+    return schema_dict
+
+
+def upload_metadata(csv_filename: str, csv_s3_path: str, csv_upload_at: str, csv_schema_dict: dict, json_s3_path: str, json_filename: str) -> None:
+    logging.info(f"Uploading metadata for {csv_filename}")
+    json_to_add = {
+        "filename": csv_filename,
+        "s3_path": csv_s3_path,
+        "upload_at": csv_upload_at,
+        "schema": csv_schema_dict
+        }
+    
+    if not wr.s3.does_object_exist(json_s3_path):
+        with open(json_filename, "w") as file:
+            json.dump([], file)
+    else:
+        wr.s3.download(json_s3_path, json_filename)
+    
+    with open(json_filename, "r") as file:
+        metadata = json.load(file)
+    metadata.append(json_to_add)
+    with open(json_filename, "w") as file:
+        json.dump(metadata, file, indent=4)
+    upload_file_to_s3(json_filename, json_s3_path, overwrite=True)
+    os.remove(json_filename)
+    logging.info(f"Metadata updated at {json_s3_path}")
 
 
 def main() -> None:
     init_logging()
     logging.info(f"Extract started at {pd.Timestamp.now()}")
-
+    
     database = "openpowerlifting"
     table = "lifter"
     data_url = (
@@ -91,18 +123,20 @@ def main() -> None:
     )
     data_filename = f"{database}-{table}-{pd.Timestamp.now().strftime('%Y%m%d')}.zip"
     csv_s3_dir = f"s3://tdouglas-data-prod-useast2/data/raw/{database}/{table}"
-
-    # print(wr.s3.list_directories(csv_s3_dir+"/"))
-    # quit()
+    json_filename = "metadata.json"
+    json_s3_path = f"s3://tdouglas-data-prod-useast2/metadata/raw/{database}/{table}/{json_filename}"
 
     logging.info("-- DOWNLOADING ZIP FROM HTTPS --")
     download_file_from_url(data_url, data_filename)
 
     logging.info("-- EXTRACTING CSV FROM ZIP AND UPLOADING TO S3 --")
-    csv_s3_path = extract_and_upload_csv_from_zip(data_filename, csv_s3_dir)
+    (csv_filename, csv_s3_path, csv_upload_at) = extract_and_upload_csv_from_zip(data_filename, csv_s3_dir)
 
-    # logging.info("-- ENRICHING CSV WITH METADATA --")
-    # enrich_csv(csv_s3_path)
+    logging.info("-- INFERRING DATA SCHEMA FROM CSV FILE --")
+    csv_schema_dict = infer_schema(csv_s3_path)
+
+    logging.info("-- UPLOADING FILE EXTRACTION METADATA --")
+    upload_metadata(csv_filename, csv_s3_path, csv_upload_at, csv_schema_dict, json_s3_path, json_filename)    
 
     logging.info(f"Extract ended at {pd.Timestamp.now()}")
 

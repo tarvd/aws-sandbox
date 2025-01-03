@@ -15,23 +15,18 @@ def init_logging() -> None:
     )
 
 
-def create_curated_ddl(
-    curated_database: str, curated_table: str, raw_database: str, raw_table: str
-):
-    return f"""
-            CREATE TABLE {curated_database}.{curated_table} AS
-            WITH t_latest_date AS (
-                SELECT max(sourcerecorddate) as max_date
-                FROM {raw_database}.{raw_table}
-            )
-            SELECT rt.*
-            FROM {raw_database}.{raw_table} rt, t_latest_date
-            WHERE rt.sourcerecorddate = t_latest_date.max_date
-        """
-
-
-def drop_curated_ddl(curated_database: str, curated_table: str):
-    return f"""DROP TABLE {curated_database}.{curated_table}"""
+def infer_schema(csv_s3_path: str) -> dict:
+    logging.info(f"Inferring schema of file: {csv_s3_path}")
+    df = wr.s3.read_csv(csv_s3_path, nrows=10000)
+    schema_dict = (
+        df.dtypes.copy()
+        .replace("object", "string")
+        .replace("float64", "float")
+        .replace("int64", "int")
+        .to_dict()
+    )
+    logging.info(f"Schema inferred for file with {len(schema_dict)} columns")
+    return schema_dict
 
 
 def run_athena_query(ddl_sql: str):
@@ -52,26 +47,23 @@ def run_athena_query(ddl_sql: str):
 
 
 def main() -> None:
-    init_logging()
-    logging.info(f"Transform started at {pd.Timestamp.now()}")
+    # init_logging()
+    # logging.info(f"Transform started at {pd.Timestamp.now()}")
 
-    curated_database = "curated"
-    curated_table = "lifter"
-    raw_database = "openpowerlifting"
-    raw_table = "lifter_iceberg"
-
-    if wr.catalog.does_table_exist(curated_database, curated_table):
-        logging.info(f"-- DROPPING TRANSFORMED TABLE --")
-        curated_drop = drop_curated_ddl(curated_database, curated_table)
-        run_athena_query(curated_drop)
-
-    logging.info(f"-- CREATING TRANSFORMED TABLE --")
-    curated_ddl = create_curated_ddl(
-        curated_database, curated_table, raw_database, raw_table
+    csv_s3_path = "openpowerlifting-2024-12-28-acdecc3a.csv"
+    df = pd.read_csv(csv_s3_path, nrows=10000)
+    schema_dict = (
+        df.dtypes.copy()
+        .replace("object", "string")
+        .replace("float64", "float")
+        .replace("int64", "int")
+        .to_dict()
     )
-    run_athena_query(curated_ddl)
+    print(df.head())
+    for item in schema_dict.items():
+        print(item)
 
-    logging.info(f"Transform ended at {pd.Timestamp.now()}")
+    # logging.info(f"Transform ended at {pd.Timestamp.now()}")
 
 
 if __name__ == "__main__":
