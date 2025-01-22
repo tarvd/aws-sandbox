@@ -1,8 +1,5 @@
-WITH
-  t AS (
-   SELECT
+SELECT
      MD5(TO_UTF8(CONCAT(COALESCE(name, 'Null'), '-', COALESCE(event, 'Null'), '-', COALESCE(equipment, 'Null'), '-', COALESCE(division, 'Null'), '-', COALESCE(place, 'Null'), '-', COALESCE("date", 'Null'), '-', COALESCE(meetname, 'Null')))) primary_key
-   , source_record_date
    , name
    , sex
    , event event_lifts
@@ -47,59 +44,4 @@ WITH
    , sanctioned
    , date(substring(element_at(split("$path", 'openpowerlifting-'), 2), 1, 10)) source_record_date
    FROM
-     {{ source('openpowerlifting', 'lifter') primary_key}
-),
-t2 as (
-    SELECT *,
-        row_number() over ()
-    FROM t
-    WHERE source_record_date = (SELECT MAX(source_record_date) FROM t)
-)
-SELECT
-  primary_key
-, source_record_date
-, name
-, sex
-, event_lifts
-, equipment
-, age
-, age_class
-, birth_year_class
-, division
-, bodyweight_kg
-, weight_class_kg
-, squat1_kg
-, squat2_kg
-, squat3_kg
-, squat4_kg
-, squat_best_of_3_kg
-, bench1_kg
-, bench2_kg
-, bench3_kg
-, bench4_kg
-, bench_best_of_3_kg
-, deadlift1_kg
-, deadlift2_kg
-, deadlift3_kg
-, deadlift4_kg
-, deadlift_best_of_3_kg
-, total_kg
-, place
-, dots
-, wilks
-, glossbrenner
-, goodlift
-, tested_meet
-, country
-, state
-, federation
-, parent_federation
-, meet_date
-, meet_country
-, meet_state
-, meet_town
-, meet_name
-, sanctioned
-FROM
-  t2
-WHERE (row_num = 1)
+     {{ source('openpowerlifting', 'lifter') }}
