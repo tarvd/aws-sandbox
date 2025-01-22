@@ -6,7 +6,7 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "awswrangler>=3.10.1",
-    "pandas>=2.2.3",
+    "dbt-athena-community>=1.8.4",
     "requests>=2.32.3",
     "ruff>=0.8.5",
 ]
