@@ -188,3 +188,18 @@ Happy modeling!
 [0m07:29:44.800852 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x00000281267929E0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x00000281267FA330>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x0000028126809260>]}
 [0m07:29:44.801278 [debug] [MainThread]: Flushing usage events
 [0m07:29:45.079118 [debug] [MainThread]: An error was encountered while trying to flush usage events
+[0m16:35:23.263803 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x00000241121F96A0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x00000241103B4E10>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000002411332BED0>]}
+
+
+============================== 16:35:23.426541 | eb3403a7-3899-447e-813b-7625a1211b74 ==============================
+[0m16:35:23.426541 [info ] [MainThread]: Running with dbt=1.9.1
+[0m16:35:23.428089 [debug] [MainThread]: running dbt with arguments {'printer_width': '80', 'indirect_selection': 'eager', 'write_json': 'True', 'log_cache_events': 'False', 'partial_parse': 'True', 'cache_selected_only': 'False', 'warn_error': 'None', 'version_check': 'True', 'profiles_dir': 'C:\\Users\\tedwa\\.dbt', 'log_path': 'logs', 'debug': 'False', 'fail_fast': 'False', 'use_colors': 'True', 'use_experimental_parser': 'False', 'empty': 'False', 'quiet': 'False', 'no_print': 'None', 'warn_error_options': 'WarnErrorOptions(include=[], exclude=[])', 'invocation_command': 'dbt run', 'static_parser': 'True', 'log_format': 'default', 'target_path': 'None', 'introspect': 'True', 'send_anonymous_usage_stats': 'True'}
+[0m16:35:23.428753 [error] [MainThread]: Encountered an error:
+Runtime Error
+  No dbt_project.yml found at expected path C:\Users\tedwa\Code\aws-sandbox\dbt_project.yml
+  Verify that each entry within packages.yml (and their transitive dependencies) contains a file named dbt_project.yml
+  
+[0m16:35:23.429848 [debug] [MainThread]: Command `dbt run` failed at 16:35:23.429721 after 0.32 seconds
+[0m16:35:23.430184 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x0000024113354C30>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x0000024113249FD0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x00000241131D6250>]}
+[0m16:35:23.430561 [debug] [MainThread]: Flushing usage events
+[0m16:35:23.883283 [debug] [MainThread]: An error was encountered while trying to flush usage events
