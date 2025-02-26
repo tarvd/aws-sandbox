@@ -1,11 +1,12 @@
-import requests
 import logging
 from datetime import datetime, timezone
 from pathlib import Path
 from dataclasses import dataclass
 from zipfile import ZipFile
+
 import boto3
 from awswrangler import s3
+import requests
 
 logging.basicConfig(
     filename=Path("logs", "opl_pipeline.log"),
