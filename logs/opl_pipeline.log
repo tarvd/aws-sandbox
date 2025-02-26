@@ -231,3 +231,26 @@
 2025-02-26 00:34:11 - S3Upload(filename='tmp\\openpowerlifting-2025-02-22\\openpowerlifting-2025-02-22-48890240.csv', s3_path='s3://tdouglas-data-prod-useast2/data/raw/openpowerlifting/lifter/', overwrite=False, boto3_session=Session(region_name='us-east-2'), upload_status='Abort', upload_start_at='2025-02-26 06:34:10 UTC', upload_end_at='2025-02-26 06:34:11 UTC')
 2025-02-26 00:34:11 - Files removed from tmp/
 2025-02-26 00:34:11 - Pipeline ended
+2025-02-26 01:13:42 - Pipeline started
+2025-02-26 01:13:42 - Data source built: HttpRequest(url='https://openpowerlifting.gitlab.io/opl-csv/files/openpowerlifting-latest.zip', destination=WindowsPath('tmp/data.zip'), download_start_at=None, download_end_at=None, response=None)
+2025-02-26 01:13:42 - Download started from: https://openpowerlifting.gitlab.io/opl-csv/files/openpowerlifting-latest.zip
+2025-02-26 01:13:49 - Response received from: https://openpowerlifting.gitlab.io/opl-csv/files/openpowerlifting-latest.zip
+2025-02-26 01:13:49 - HttpRequest(url='https://openpowerlifting.gitlab.io/opl-csv/files/openpowerlifting-latest.zip', destination=WindowsPath('tmp/data.zip'), download_start_at='2025-02-26 07:13:42 UTC', download_end_at='2025-02-26 07:13:49 UTC', response=<Response [200]>)
+2025-02-26 01:13:50 - File saved to: tmp\data.zip
+2025-02-26 01:13:50 - Extract Zip transformation started with filename: tmp\data.zip
+2025-02-26 01:13:53 - Data extracted to: tmp\openpowerlifting-2025-02-22\openpowerlifting-2025-02-22-48890240.csv
+2025-02-26 01:24:12 - Pipeline started
+2025-02-26 01:24:12 - Data source built: HttpRequest(url='https://openpowerlifting.gitlab.io/opl-csv/files/openpowerlifting-latest.zip', destination=WindowsPath('tmp/data.zip'), download_start_at=None, download_end_at=None, response=None)
+2025-02-26 01:24:12 - Download started from: https://openpowerlifting.gitlab.io/opl-csv/files/openpowerlifting-latest.zip
+2025-02-26 01:24:19 - Response received from: https://openpowerlifting.gitlab.io/opl-csv/files/openpowerlifting-latest.zip
+2025-02-26 01:24:19 - HttpRequest(url='https://openpowerlifting.gitlab.io/opl-csv/files/openpowerlifting-latest.zip', destination=WindowsPath('tmp/data.zip'), download_start_at='2025-02-26 07:24:12 UTC', download_end_at='2025-02-26 07:24:19 UTC', response=<Response [200]>)
+2025-02-26 01:24:20 - File saved to: tmp\data.zip
+2025-02-26 01:24:20 - Extract Zip transformation started with filename: tmp\data.zip
+2025-02-26 01:24:24 - Data extracted to: tmp\openpowerlifting-2025-02-22\openpowerlifting-2025-02-22-48890240.csv
+2025-02-26 01:24:24 - Data sink built: S3Upload(filename='tmp\\openpowerlifting-2025-02-22\\openpowerlifting-2025-02-22-48890240.csv', s3_path='s3://tdouglas-data-prod-useast2/data/raw/openpowerlifting/lifter/2025/02/22/openpowerlifting-2025-02-22-48890240.csv', overwrite=False, boto3_session=Session(region_name='us-east-2'), upload_status=None, upload_start_at=None, upload_end_at=None)
+2025-02-26 01:24:24 - Upload started to s3_path: s3://tdouglas-data-prod-useast2/data/raw/openpowerlifting/lifter/2025/02/22/openpowerlifting-2025-02-22-48890240.csv
+2025-02-26 01:24:24 - Found credentials in shared credentials file: ~/.aws/credentials
+2025-02-26 01:24:25 - Upload finished with status: Abort
+2025-02-26 01:24:25 - S3Upload(filename='tmp\\openpowerlifting-2025-02-22\\openpowerlifting-2025-02-22-48890240.csv', s3_path='s3://tdouglas-data-prod-useast2/data/raw/openpowerlifting/lifter/2025/02/22/openpowerlifting-2025-02-22-48890240.csv', overwrite=False, boto3_session=Session(region_name='us-east-2'), upload_status='Abort', upload_start_at='2025-02-26 07:24:24 UTC', upload_end_at='2025-02-26 07:24:25 UTC')
+2025-02-26 01:24:25 - Files removed from tmp/
+2025-02-26 01:24:25 - Pipeline ended

@@ -57,7 +57,6 @@ def upload_file_to_s3(filename: str, s3_path: str, overwrite: bool = False) -> N
     return upload_status
 
 
-
 def extract_and_upload_csv_from_zip(
     filename: str, s3_path: str, overwrite: bool = False
 ) -> str:
@@ -75,7 +74,9 @@ def extract_and_upload_csv_from_zip(
 
         # Extract the csv from the zip and upload to S3
         with z.open(data_archive_path, "r") as csv_in_zip:
-            upload_status = upload_file_to_s3(csv_in_zip, csv_s3_path, overwrite=overwrite)
+            upload_status = upload_file_to_s3(
+                csv_in_zip, csv_s3_path, overwrite=overwrite
+            )
         upload_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
     return (data_archive_file, csv_s3_path, upload_at, upload_status)
 
@@ -145,8 +146,8 @@ def main() -> None:
     download_file_from_url(data_url, data_filename)
 
     logging.info("-- EXTRACTING CSV FROM ZIP AND UPLOADING TO S3 --")
-    (csv_filename, csv_s3_path, csv_upload_at, upload_status) = extract_and_upload_csv_from_zip(
-        data_filename, csv_s3_dir
+    (csv_filename, csv_s3_path, csv_upload_at, upload_status) = (
+        extract_and_upload_csv_from_zip(data_filename, csv_s3_dir)
     )
 
     if upload_status == "Success":

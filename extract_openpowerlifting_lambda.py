@@ -45,22 +45,24 @@ def upload_file_to_s3(filename: str, s3_path: str, overwrite: bool = False) -> N
     return upload_status
 
 
-def lambda_handler(event, context):# Constants
-    data_url = "https://openpowerlifting.gitlab.io/opl-csv/files/openpowerlifting-latest.zip"
+def lambda_handler(event, context):  # Constants
+    data_url = (
+        "https://openpowerlifting.gitlab.io/opl-csv/files/openpowerlifting-latest.zip"
+    )
     data_filename = "/tmp/data.zip"
     csv_s3_dir = "s3://tdouglas-data-prod-useast2/data/raw/openpowerlifting/lifter/"
-    
+
     download_url_zip(data_url, data_filename)
     csv_path = extract_zip(data_filename)
     csv_filename = os.path.basename(csv_path)
-    s3_path = str(s3://aws-athena-query-results-820242901733-engineer-us-east-2/dbt/)
+    s3_path = str("s3://aws-athena-query-results-820242901733-engineer-us-east-2/dbt/")
     upload_status = upload_file_to_s3(csv_path, csv_s3_dir)
 
     response = {
         "data_url": data_url,
         "csv_path": csv_path,
         "s3_path": s3_path,
-        "upload_status": upload_status
+        "upload_status": upload_status,
     }
     print(response)
     return response

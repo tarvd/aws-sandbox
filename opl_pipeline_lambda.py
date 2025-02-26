@@ -1,24 +1,19 @@
-import requests
+import sys
 import logging
 from datetime import datetime, timezone
 from pathlib import Path
 from dataclasses import dataclass
 from zipfile import ZipFile
+
 import boto3
 from awswrangler import s3
-
-logging.basicConfig(
-    filename=Path("logs", "opl_pipeline.log"),
-    level=logging.INFO,
-    format="%(asctime)s - %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-)
+import requests
 
 
 @dataclass
 class HttpRequest:
     url: str
-    destination: Path = Path("tmp", "data.zip")
+    destination: Path = Path("/tmp/data.zip")
     download_start_at: str = None
     download_end_at: str = None
     response: requests.Response = None
@@ -44,7 +39,7 @@ class HttpRequest:
             )
             logging.info(f"Download failed with message {e}")
             logging.info(f"{self}")
-        with open(self.destination, "wb") as file:
+        with open(self.destination.resolve(), "wb") as file:
             for chunk in self.response.iter_content(chunk_size=8192):
                 if chunk:
                     file.write(chunk)
@@ -89,12 +84,12 @@ class S3Upload:
             logging.info(f"{self}")
 
 
-def extract_zip(filename: Path) -> str:
+def extract_zip(filename: str) -> str:
     logging.info(f"Extract Zip transformation started with filename: {filename}")
     try:
         with ZipFile(filename, "r") as z:
-            z.extractall(Path("tmp"))
-        for fn in Path("tmp").rglob("*"):
+            z.extractall("/tmp")
+        for fn in Path("/tmp").rglob("*"):
             if fn.name[-4:] == ".csv":
                 logging.info(f"Data extracted to: {fn}")
                 return str(fn)
@@ -102,17 +97,31 @@ def extract_zip(filename: Path) -> str:
         logging.info(f"extract_zip failed with message {e}")
 
 
-def clean_up(start_directory: Path = Path("tmp")) -> None:
-    for path in start_directory.iterdir():
+def clean_up(start_directory: str = "/tmp") -> None:
+    for path in Path(start_directory).iterdir():
         if path.is_file():
             path.unlink()
         else:
             clean_up(path)
-    for path in start_directory.iterdir():
+    for path in Path(start_directory).iterdir():
         path.rmdir()
 
 
-def main() -> None:
+def setup_logging():
+    root = logging.getLogger()
+    root.setLevel(logging.DEBUG)
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setLevel(logging.DEBUG)
+    formatter = logging.Formatter(
+        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    )
+    handler.setFormatter(formatter)
+    root.addHandler(handler)
+
+
+def lambda_handler(event, context):
+    # Logging
+    setup_logging()
     logging.info("Pipeline started")
 
     # Extract
@@ -140,9 +149,11 @@ def main() -> None:
 
     # Clean up
     clean_up()
-    logging.info("Files removed from tmp/")
+    logging.info("Files removed from /tmp")
     logging.info("Pipeline ended")
 
-
-if __name__ == "__main__":
-    main()
+    response = {
+        "s3_path": s3_upload.s3_path,
+        "upload_status": s3_upload.upload_status,
+    }
+    return response
