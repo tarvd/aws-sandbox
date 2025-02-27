@@ -1,3 +1,8 @@
+{{ config(
+  materialized='table',
+  table_type='iceberg',
+  format='parquet'
+) }}
 WITH t AS (
   SELECT 
     *,
