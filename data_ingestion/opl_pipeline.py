@@ -9,7 +9,7 @@ from awswrangler import s3
 import requests
 
 logging.basicConfig(
-    filename=Path("logs", "opl_pipeline.log"),
+    filename=Path("log", "opl_pipeline.log"),
     level=logging.INFO,
     format="%(asctime)s - %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",

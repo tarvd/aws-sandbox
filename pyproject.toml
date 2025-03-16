@@ -7,6 +7,7 @@ requires-python = ">=3.13"
 dependencies = [
     "awswrangler>=3.10.1",
     "dbt-athena-community>=1.8.4",
+    "duckdb>=1.2.0",
     "requests>=2.32.3",
     "ruff>=0.8.5",
     "streamlit>=1.41.1",
