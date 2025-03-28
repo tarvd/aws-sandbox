@@ -12,6 +12,7 @@ wheels/
 # Data
 *.zip
 *.csv
+*.parquet
 
 # Logs, Analysis
 log/
