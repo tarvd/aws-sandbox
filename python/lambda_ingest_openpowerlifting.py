@@ -9,7 +9,6 @@ import requests
 logger = logging.getLogger()
 logger.setLevel("INFO")
 
-
 s3 = boto3.client('s3')
 
 
@@ -46,7 +45,7 @@ def lambda_handler(event, context):
         
         return {
             "statusCode": 200,
-            "message": "File loaded successfully from OPL to S3, {url}, {bucket}, {key}"
+            "message": f"File loaded successfully from OPL to S3, {url}, {bucket}, {key}"
         }
 
     except Exception as e:
