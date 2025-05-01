@@ -12,7 +12,11 @@ wheels/
 # Data
 *.zip
 *.csv
+*.parquet
 
 # Logs, Analysis
-log/
-analysis/
+log/*
+analysis/*
+
+# Ruff
+.ruff_cache
