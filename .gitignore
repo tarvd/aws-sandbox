@@ -14,9 +14,5 @@ wheels/
 *.csv
 *.parquet
 
-# Logs, Analysis
-log/*
-analysis/*
-
 # Ruff
 .ruff_cache
