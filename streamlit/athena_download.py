@@ -1,6 +1,7 @@
 import awswrangler as wr
 
-def main():
+def main() -> None:
+    # Query Athena lifter data
     df = wr.athena.read_sql_query(
         sql="SELECT * FROM data_lake_curated.lifter", 
         database="data_lake_curated", 
