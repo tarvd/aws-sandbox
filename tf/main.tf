@@ -34,8 +34,8 @@ resource "aws_iam_role" "lambda_ingest_powerlifting_role" {
   path = "/service-role/"
   description = "Role for Lambda function to ingest Open Powerlifting data"
   managed_policy_arns = [
-    "arn:aws:iam::820242901733:policy/service-role/AWSLambdaBasicExecutionRole-c7c90f36-ad92-4754-a4b4-1d2afa342ef6",
     "arn:aws:iam::aws:policy/AmazonS3FullAccess",
+    "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
   ]
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -91,12 +91,22 @@ resource "aws_s3_bucket" "s3_lambda" {
   }
 }
 
+variable "lambda_openpowerlifting_filename" {
+  type    = string
+  default = "../python/lambda_ingest_openpowerlifting.zip"
+}
+
+variable "lambda_openpowerlifting_handler" {
+  type    = string
+  default = "lambda_ingest_openpowerlifting.lambda_handler"
+}
+
 resource "aws_lambda_function" "lambda_openpowerlifting_tf" {
   function_name = "ted-sand-dev-use2-ingest-openpowerlifting-tf"
-  role = "arn:aws:iam::820242901733:role/service-role/LambdaIngestPowerliftingRole"
-  filename = "../python/lambda_ingest_openpowerlifting.zip"
-  handler = "lambda_ingest_openpowerlifting.lambda_handler"
-  source_code_hash = filebase64sha256("../python/lambda_ingest_openpowerlifting.zip")
+  role = aws_iam_role.lambda_ingest_powerlifting_role.arn
+  filename = var.lambda_openpowerlifting_filename
+  handler = var.lambda_openpowerlifting_handler
+  source_code_hash = filebase64sha256(var.lambda_openpowerlifting_filename)
   runtime = "python3.9"
   layers = [
     "arn:aws:lambda:us-east-2:336392948345:layer:AWSSDKPandas-Python313:1",
@@ -118,7 +128,7 @@ resource "aws_cloudwatch_event_rule" "daily_rule" {
   description = "Daily rule to trigger Lambda function"
 }
 
-resource "aws_cloudwatch_event_target" "lambda_target" {
+resource "aws_cloudwatch_event_target" "lambda_target_openpowerlifting" {
   rule      = aws_cloudwatch_event_rule.daily_rule.name
   target_id = "send-to-lambda-openpowerlifting-tf"
   arn       = aws_lambda_function.lambda_openpowerlifting_tf.arn
@@ -130,10 +140,4 @@ resource "aws_lambda_permission" "allow_eventbridge_openpowerlifting" {
   function_name = aws_lambda_function.lambda_openpowerlifting_tf.function_name
   principal     = "events.amazonaws.com"
   source_arn    = aws_cloudwatch_event_rule.daily_rule.arn
-}
-
-resource "aws_lambda_alias" "test_alias" {
-  name             = "test_alias"
-  function_name    = aws_lambda_function.lambda_openpowerlifting_tf.function_name
-  function_version = "$LATEST"
 }
