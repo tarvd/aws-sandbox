@@ -7,6 +7,6 @@ resource "aws_iam_user" "tdouglas" {
 
   tags = merge(
     local.tags,
-    {name = "tdouglas-iam-user"}
+    { name = "tdouglas-iam-user" }
   )
 }
