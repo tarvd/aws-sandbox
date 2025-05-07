@@ -13,6 +13,51 @@ provider "aws" {
   region = "us-east-2"
 }
 
+resource "aws_iam_group" "admin" {
+  name = "admin"
+}
+
+resource "aws_iam_user" "tdouglas" {
+  name = "tdouglas"
+
+  tags = {
+    org = "ted"
+    product = "sand"
+    env = "dev"
+    name = "tdouglas-iam-user"
+    AKIA356SJNLSVAPD4LW2 = "cli"
+  }
+}
+
+resource "aws_iam_role" "lambda_ingest_powerlifting_role" {
+  name = "LambdaIngestPowerliftingRole"
+  path = "/service-role/"
+  description = "Role for Lambda function to ingest Open Powerlifting data"
+  managed_policy_arns = [
+    "arn:aws:iam::820242901733:policy/service-role/AWSLambdaBasicExecutionRole-c7c90f36-ad92-4754-a4b4-1d2afa342ef6",
+    "arn:aws:iam::aws:policy/AmazonS3FullAccess",
+  ]
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+      }
+    ]
+  })
+
+  tags = {
+    org = "ted"
+    product = "sand"
+    env = "dev"
+    name = "ingest-openpowerlifting-iam-role"
+  }
+}
+
 resource "aws_s3_bucket" "s3_athena" {
   bucket = "ted-sand-dev-s3-use2-athena"
 
