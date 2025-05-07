@@ -41,8 +41,8 @@ def create_iceberg_ddl(
     ddl_str = f"""
     CREATE TABLE IF NOT EXISTS {database}.{table} (
         {columns_str}
-    ) 
-    LOCATION '{s3_iceberg_location}' 
+    )
+    LOCATION '{s3_iceberg_location}'
     TBLPROPERTIES (
     'table_type'='ICEBERG',
     'format'='parquet',
@@ -82,7 +82,7 @@ def create_load_view_ddl(database: str, table: str, view: str) -> str:
             date(substring(element_at(split("$path", 'openpowerlifting-'), 2),1,10)) as source_record_date
         FROM {database}.{table}
     )
-    SELECT 
+    SELECT
         *
     FROM t
     WHERE source_record_date = (SELECT MAX(source_record_date) FROM t)
@@ -93,7 +93,7 @@ def create_load_view_ddl(database: str, table: str, view: str) -> str:
 def drop_csv_ddl(database: str, table: str) -> str:
     logging.info(f"Creating Athena SQL to drop table: {database}.{table}")
     ddl = f"""
-    DROP TABLE {database}.{table} 
+    DROP TABLE {database}.{table}
     """
     return ddl
 
@@ -105,7 +105,7 @@ def create_iceberg_insert(
         f"Constructing Athena SQL to insert into Iceberg table: {data_database}.{data_table} into {iceberg_database}.{iceberg_table}"
     )
     dml = f"""
-        INSERT INTO {iceberg_database}.{iceberg_table} 
+        INSERT INTO {iceberg_database}.{iceberg_table}
         SELECT *
         FROM {data_database}.{data_table}
         WHERE source_record_date > (SELECT COALESCE(MAX(source_record_date),DATE('1900-01-01')) FROM {iceberg_database}.{iceberg_table})
@@ -114,7 +114,7 @@ def create_iceberg_insert(
 
 
 def run_athena_query(ddl_sql: str):
-    logging.info(f"Running Athena query")
+    logging.info("Running Athena query")
     query_execution_id = wr.athena.start_query_execution(ddl_sql)
     logging.info(f"Query started with id: {query_execution_id}")
     loop_condition = True
@@ -143,23 +143,23 @@ def main() -> None:
     curated_table = "lifter"
     curated_dir = "s3://tdouglas-data-prod-useast2/data/curated/lifter/"
 
-    logging.info(f"-- INFERRING DATA SCHEMA FROM CSV --")
+    logging.info("-- INFERRING DATA SCHEMA FROM CSV --")
     schema_dict = get_schema(metadata_s3_path)
 
     if not wr.catalog.does_table_exist(raw_database, raw_table):
-        logging.info(f"-- CREATING CSV EXTERNAL TABLE --")
+        logging.info("-- CREATING CSV EXTERNAL TABLE --")
         csv_ddl = create_csv_ddl(raw_database, raw_table, schema_dict, raw_files)
         run_athena_query(csv_ddl)
         logging.info(f"Raw data table created: {raw_database}.{raw_table}")
 
     if not wr.catalog.does_table_exist(raw_database, raw_view):
-        logging.info(f"-- CREATING DATA LOAD VIEW ON EXTERNAL TABLE --")
+        logging.info("-- CREATING DATA LOAD VIEW ON EXTERNAL TABLE --")
         data_load_view_ddl = create_load_view_ddl(raw_database, raw_table, raw_view)
         run_athena_query(data_load_view_ddl)
         logging.info(f"Most recent raw data view created: {raw_database}.{raw_view}")
 
     if not wr.catalog.does_table_exist(curated_database, curated_table):
-        logging.info(f"-- CREATING ICEBERG TABLE --")
+        logging.info("-- CREATING ICEBERG TABLE --")
         schema_dict.update({"source_record_date": "date"})
         iceberg_ddl = create_iceberg_ddl(
             curated_database, curated_table, schema_dict, curated_dir
@@ -167,7 +167,7 @@ def main() -> None:
         run_athena_query(iceberg_ddl)
         logging.info(f"Iceberg table created: {curated_database}.{curated_table}")
 
-    logging.info(f"-- INSERTING DATA INTO ICEBERG TABLE --")
+    logging.info("-- INSERTING DATA INTO ICEBERG TABLE --")
     iceberg_dml = create_iceberg_insert(
         curated_database, curated_table, raw_database, raw_view
     )

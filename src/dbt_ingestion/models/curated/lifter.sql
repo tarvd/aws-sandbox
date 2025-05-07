@@ -4,12 +4,12 @@
   format='parquet'
 ) }}
 WITH t AS (
-  SELECT 
+  SELECT
     *,
     row_number() over (partition by primary_key order by source_record_date desc) as row_num
   FROM {{ ref('stg_openpowerlifting_lifter') }}
 )
-SELECT 
+SELECT
   primary_key,
   name,
   sex,
