@@ -7,6 +7,12 @@ terraform {
   }
 
   required_version = ">= 1.11.0"
+
+  backend "s3" {
+    bucket = "ted-sand-dev-s3-use2-terraform"
+    key    = "backend/terraform.tfstate"
+    region = "us-east-2"
+  }
 }
 
 provider "aws" {
