@@ -19,12 +19,10 @@ resource "aws_iam_role" "lambda_ingest_powerlifting_role" {
     ]
   })
 
-  tags = {
-    org = "ted"
-    product = "sand"
-    env = "dev"
-    name = "ingest-openpowerlifting-iam-role"
-  }
+  tags = merge(
+    local.tags,
+    {name = "ingest-openpowerlifting-iam-role"}
+  )
 }
 
 resource "aws_lambda_function" "lambda_openpowerlifting_tf" {
@@ -40,18 +38,20 @@ resource "aws_lambda_function" "lambda_openpowerlifting_tf" {
   memory_size = 3008
   publish = false
   timeout = 60
-  tags = {
-    org = "ted"
-    product = "sand"
-    env = "dev"
-    name = "openpowerlifting-lambda-tf"
-  }
+  tags = merge(
+    local.tags,
+    {name = "openpowerlifting-lambda-tf"}
+  )
 }
 
 resource "aws_cloudwatch_event_rule" "daily_rule" {
   name = "daily_rule"
   schedule_expression = "cron(0 18 ? * * *)"
   description = "Daily rule to trigger Lambda function"
+  tags = merge(
+    local.tags,
+    {name = "daily-rule"}
+  )
 }
 
 resource "aws_cloudwatch_event_target" "lambda_target_openpowerlifting" {

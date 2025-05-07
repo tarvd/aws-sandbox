@@ -12,3 +12,14 @@ terraform {
 provider "aws" {
   region = "us-east-2"
 }
+
+locals {
+  org     = "ted"
+  product = "sand"
+  env     = "dev"
+  tags = {
+    org     = local.org
+    product = local.product
+    env     = local.env
+  }
+}
