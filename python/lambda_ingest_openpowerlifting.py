@@ -18,8 +18,9 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     """
 
     try:
-        logger = logging.getLogger()
-        logger.setLevel("INFO")
+        logger = logging.getLogger(__name__)
+        logging.basicConfig(filename=f"lambda_ingest_openpowerlifting.log", encoding='utf-8', level=logging.INFO)
+        logger.info("Starting Lambda function")
         s3 = boto3.client("s3")
 
         url = "https://openpowerlifting.gitlab.io/opl-csv/files/openpowerlifting-latest.zip"
@@ -48,8 +49,10 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 s3.upload_fileobj(csv_file, bucket, key)
 
         logger.info("File ingested successfully")
+        logger.info("Ending Lambda function")
         return {"statusCode": 200, "message": f"File ingested successfully."}
 
     except Exception as e:
         logger.error(f"Error loading file: {str(e)}")
+        logger.info("Ending Lambda function")
         return {"statusCode": 500, "message": f"File ingestion failed."}
