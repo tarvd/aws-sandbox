@@ -25,6 +25,4 @@ repos:
       - id: check-json
       - id: check-toml
       - id: end-of-file-fixer
-      - id: pretty-format-json
-        args: [--autofix]
       - id: trailing-whitespace
