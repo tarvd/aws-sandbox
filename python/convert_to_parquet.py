@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Dict, Any
 import logging
 from zipfile import ZipFile
 from io import BytesIO
@@ -7,7 +7,7 @@ import boto3
 import requests
 
 
-def lambda_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
+def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     """
     Main Lambda handler function
     Parameters:
