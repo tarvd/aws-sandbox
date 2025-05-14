@@ -1,62 +1,29 @@
-from typing import Dict, Any
-import logging
-from zipfile import ZipFile
-from io import BytesIO
-
-import boto3
-import requests
+import awswrangler as wr
 
 
-def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
+def convert_csv_to_parquet(source_s3_uri: str, target_s3_uri: str) -> None:
     """
-    Main Lambda handler function
-    Parameters:
-        event: Dict containing the Lambda function event data
-        context: Lambda runtime context
-    Returns:
-        Dict containing status message
+    Converts CSV files in S3 to Parquet format.
     """
 
-    try:
-        logger = logging.getLogger(__name__)
-        logging.basicConfig(
-            filename="lambda_ingest_openpowerlifting.log",
-            encoding="utf-8",
-            level=logging.INFO,
-        )
-        logger.info("Starting Lambda function")
-        s3 = boto3.client("s3")
+    # Read the S3 CSV data
+    df = wr.s3.read_csv(source_s3_uri)
 
-        url = "https://openpowerlifting.gitlab.io/opl-csv/files/openpowerlifting-latest.zip"
-        bucket = "ted-sand-dev-s3-use2-data"
+    # Convert the data to Parquet
+    wr.s3.to_parquet(df, target_s3_uri)
 
-        logger.info("Requesting response from HTTP endpoint")
-        logger.info(f"URL: {url}")
-        response = requests.get(url)
-        response.raise_for_status()
 
-        logger.info("Opening ZIP file")
-        with ZipFile(BytesIO(response.content)) as z:
-            csv_files = [name for name in z.namelist() if name.endswith(".csv")]
+def main() -> None:
+    source_bucket = "ted-sand-dev-s3-use2-data"
+    source_key = "openpowerlifting/openpowerlifting-2025-05-12-7d08e04b.csv"
+    source_s3_uri = f"s3://{source_bucket}/{source_key}"
 
-            if not csv_files:
-                raise ValueError("No CSV files found in the ZIP archive.")
+    target_bucket = "ted-sand-dev-s3-use2-data"
+    target_key = "openpowerlifting/openpowerlifting-2025-05-12-7d08e04b.parquet"
+    target_s3_uri = f"s3://{target_bucket}/{target_key}"
 
-            csv_path = csv_files[0]
-            csv_fn = csv_path.split("/")[-1]
-            key = f"openpowerlifting/{csv_fn}"
+    convert_csv_to_parquet(source_s3_uri, target_s3_uri)
 
-            logger.info("Uploading CSV file to S3")
-            logger.info(f"Bucket: {bucket}")
-            logger.info(f"Key: {key}")
-            with z.open(csv_path, "r") as csv_file:
-                s3.upload_fileobj(csv_file, bucket, key)
 
-        logger.info("File ingested successfully")
-        logger.info("Ending Lambda function")
-        return {"statusCode": 200, "message": "File ingested successfully."}
-
-    except Exception as e:
-        logger.error(f"Error loading file: {str(e)}")
-        logger.info("Ending Lambda function")
-        return {"statusCode": 500, "message": "File ingestion failed."}
+if __name__ == "__main__":
+    main()

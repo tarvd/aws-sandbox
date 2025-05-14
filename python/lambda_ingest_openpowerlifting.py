@@ -9,7 +9,7 @@ import requests
 
 def lambda_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
     """
-    Main Lambda handler function
+    Ingests the latest Open Powerlifting CSV file from openpowerlifting.org and uploads it to S3.
     Parameters:
         event: Dict containing the Lambda function event data
         context: Lambda runtime context

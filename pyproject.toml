@@ -5,7 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
-    "awswrangler>=3.10.1",
+    "awswrangler>=3.11.0",
     "boto3>=1.35.90",
     "dbt-athena-community>=1.8.4",
     "duckdb>=1.2.0",
