@@ -18,6 +18,23 @@ resource "aws_glue_catalog_database" "cleansed" {
   }
 }
 
+resource "aws_glue_job" "openpowerlifting-cleansed-ddl" {
+  name     = "ted-sand-dev-use2-openpowerlifting-cleansed-ddl"
+  role_arn = "arn:aws:iam::820242901733:role/ted-sand-dev-use2-glue-job-role"  # your existing IAM role ARN
+
+  command {
+    name            = "glueetl"  # or "pythonshell" if Python script
+    script_location = "s3://aws-glue-assets-820242901733-us-east-2/scripts/glue_ddl_openpowerlifting.py"
+  }
+
+  glue_version = "5.0"           # AWS Glue version, e.g. 2.0, 3.0, etc.
+  max_retries = 0
+  number_of_workers = 2
+  worker_type = "G.1X"  # If you use number_of_workers, specify worker type too
+}
+
+
+
 # resource "aws_glue_catalog_table" "raw_openpowerlifting" {
 #   name          = "openpowerlifting"
 #   database_name = aws_glue_catalog_database.raw.name
