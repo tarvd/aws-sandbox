@@ -46,6 +46,30 @@ resource "aws_s3_bucket_versioning" "s3_data" {
   }
 }
 
+resource "aws_s3_bucket" "s3_cleansed_data" {
+  bucket = "ted-sand-dev-s3-use2-cleansed-data"
+
+  tags = merge(
+    local.tags,
+    { name = "cleansed-data-s3" }
+  )
+}
+
+resource "aws_s3_bucket_public_access_block" "s3_cleansed_data" {
+  bucket                  = aws_s3_bucket.s3_cleansed_data.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_versioning" "s3_cleansed_data" {
+  bucket = aws_s3_bucket.s3_cleansed_data.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
 resource "aws_s3_bucket" "s3_lambda" {
   bucket = "ted-sand-dev-s3-use2-lambda"
 
