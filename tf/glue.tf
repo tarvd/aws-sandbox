@@ -18,13 +18,13 @@ resource "aws_glue_catalog_database" "cleansed" {
   }
 }
 
-resource "aws_glue_job" "openpowerlifting-cleansed-ddl" {
-  name     = "ted-sand-dev-use2-openpowerlifting-cleansed-ddl"
-  role_arn = "arn:aws:iam::820242901733:role/ted-sand-dev-use2-glue-job-role"  # your existing IAM role ARN
+resource "aws_glue_job" "openpowerlifting_cleansed_ddl" {
+  name     = "dev-use2-tedsand-openpowerlifting-cleansed-ddl-job"
+  role_arn = "arn:aws:iam::${var.aws_account_id}:role/${aws_iam_role.glue_role.name}"  # your existing IAM role ARN
 
   command {
     name            = "glueetl"  # or "pythonshell" if Python script
-    script_location = "s3://aws-glue-assets-820242901733-us-east-2/scripts/glue_ddl_openpowerlifting.py"
+    script_location = "s3://${aws_s3_bucket.python.bucket}/glue/glue_ddl_openpowerlifting.py"
   }
 
   glue_version = "5.0"           # AWS Glue version, e.g. 2.0, 3.0, etc.

@@ -1,6 +1,6 @@
 variable "lambda_openpowerlifting_filename" {
   type    = string
-  default = "../python/lambda_ingest_openpowerlifting.zip"
+  default = "../python/lambda/lambda_ingest_openpowerlifting.zip"
   validation {
     condition     = can(regex("\\.zip$", var.lambda_openpowerlifting_filename))
     error_message = "Filename must be a .zip file"

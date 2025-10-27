@@ -11,8 +11,8 @@ resource "aws_iam_user" "tdouglas" {
   )
 }
 
-resource "aws_iam_role" "glue_job_role" {
-  name = "ted-sand-dev-use2-glue-job-role"
+resource "aws_iam_role" "glue_role" {
+  name = "dev-tedsand-glue-role"
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
     Statement = [{
@@ -26,7 +26,7 @@ resource "aws_iam_role" "glue_job_role" {
 }
 
 resource "aws_iam_policy" "glue_job_policy" {
-  name        = "glue_job_policy"
+  name        = "dev-tedsand-glue-job-policy"
   description = "Policy for Glue job to access S3 bucket and Glue Data Catalog"
 
   policy = jsonencode({
@@ -47,12 +47,12 @@ resource "aws_iam_policy" "glue_job_policy" {
           "s3:ListBucket"
         ]
         Resource = [
-          "arn:aws:s3:::aws-glue-assets-820242901733-us-east-2/",
-          "arn:aws:s3:::aws-glue-assets-820242901733-us-east-2/*",
-          "arn:aws:s3:::ted-sand-dev-s3-use2-data",
-          "arn:aws:s3:::ted-sand-dev-s3-use2-data/*",
-          "arn:aws:s3:::ted-sand-dev-s3-use2-cleansed-data",
-          "arn:aws:s3:::ted-sand-dev-s3-use2-cleansed-data/*"
+          "arn:aws:s3:::${aws_s3_bucket.python.bucket}",
+          "arn:aws:s3:::${aws_s3_bucket.python.bucket}/glue/*",
+          "arn:aws:s3:::${aws_s3_bucket.raw_data.bucket}",
+          "arn:aws:s3:::${aws_s3_bucket.raw_data.bucket}/*",
+          "arn:aws:s3:::${aws_s3_bucket.cleansed_data.bucket}",
+          "arn:aws:s3:::${aws_s3_bucket.cleansed_data.bucket}/*"
         ]
       }
     ]
@@ -60,6 +60,6 @@ resource "aws_iam_policy" "glue_job_policy" {
 }
 
 resource "aws_iam_role_policy_attachment" "glue_job_attach" {
-  role       = aws_iam_role.glue_job_role.name
+  role       = aws_iam_role.glue_role.name
   policy_arn = aws_iam_policy.glue_job_policy.arn
 }

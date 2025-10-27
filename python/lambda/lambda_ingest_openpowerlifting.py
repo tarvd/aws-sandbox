@@ -2,13 +2,16 @@ from typing import Any
 import logging
 from zipfile import ZipFile
 from io import BytesIO
+from datetime import datetime
 
 import boto3
 import requests
 
 
 URL = "https://openpowerlifting.gitlab.io/opl-csv/files/openpowerlifting-latest.zip"
-BUCKET = "ted-sand-dev-s3-use2-data"
+BUCKET = "dev-use2-tedsand-raw-data-s3"
+TODAY = datetime.now()
+DEFAULT_TARGET = f"openpowerlifting/year={TODAY.strftime('%Y')}/month={TODAY.strftime('%m')}/day={TODAY.strftime('%d')}/"
 
 
 def lambda_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
@@ -44,7 +47,11 @@ def lambda_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
 
             csv_path = csv_files[0]
             csv_fn = csv_path.split("/")[-1]
-            key = f"openpowerlifting/{csv_fn}"
+            year_val, month_val, day_val = csv_fn.split('-')[1:4]
+            if len(year_val) == 4 and len(month_val) == 2 and len(day_val) == 2 and year_val.isdigit() and month_val.isdigit() and day_val.isdigit() and year_val >= '2000' and year_val <= '3000' and month_val >= '01' and month_val <= '12' and day_val >= '01' and day_val <= '31':
+                key = f"openpowerlifting/year={year_val}/month={month_val}/day={day_val}/{csv_fn}"
+            else:
+                key = DEFAULT_TARGET + csv_fn
             with z.open(csv_path, "r") as csv_file:
                 s3.upload_fileobj(csv_file, BUCKET, key)
 
