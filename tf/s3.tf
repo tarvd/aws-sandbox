@@ -46,25 +46,25 @@ resource "aws_s3_bucket_versioning" "raw_data" {
   }
 }
 
-resource "aws_s3_bucket" "cleansed_data" {
-  bucket = "dev-use2-tedsand-cleansed-data-s3"
+resource "aws_s3_bucket" "iceberg" {
+  bucket = "dev-use2-tedsand-iceberg-s3"
 
   tags = merge(
     local.tags,
-    { name = "cleansed-data-s3" }
+    { name = "iceberg-s3" }
   )
 }
 
-resource "aws_s3_bucket_public_access_block" "cleansed_data" {
-  bucket                  = aws_s3_bucket.cleansed_data.id
+resource "aws_s3_bucket_public_access_block" "iceberg" {
+  bucket                  = aws_s3_bucket.iceberg.id
   block_public_acls       = true
   block_public_policy     = true
   ignore_public_acls      = true
   restrict_public_buckets = true
 }
 
-resource "aws_s3_bucket_versioning" "cleansed_data" {
-  bucket = aws_s3_bucket.cleansed_data.id
+resource "aws_s3_bucket_versioning" "iceberg" {
+  bucket = aws_s3_bucket.iceberg.id
   versioning_configuration {
     status = "Suspended"
   }
