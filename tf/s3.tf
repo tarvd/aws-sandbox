@@ -18,7 +18,7 @@ resource "aws_s3_bucket_public_access_block" "athena_results" {
 resource "aws_s3_bucket_versioning" "athena_results" {
   bucket = aws_s3_bucket.athena_results.id
   versioning_configuration {
-    status = "Enabled"
+    status = "Suspended"
   }
 }
 
@@ -42,7 +42,7 @@ resource "aws_s3_bucket_public_access_block" "raw_data" {
 resource "aws_s3_bucket_versioning" "raw_data" {
   bucket = aws_s3_bucket.raw_data.id
   versioning_configuration {
-    status = "Enabled"
+    status = "Suspended"
   }
 }
 
@@ -66,7 +66,7 @@ resource "aws_s3_bucket_public_access_block" "cleansed_data" {
 resource "aws_s3_bucket_versioning" "cleansed_data" {
   bucket = aws_s3_bucket.cleansed_data.id
   versioning_configuration {
-    status = "Enabled"
+    status = "Suspended"
   }
 }
 
