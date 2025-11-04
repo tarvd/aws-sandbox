@@ -47,8 +47,21 @@ def lambda_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
 
             csv_path = csv_files[0]
             csv_fn = csv_path.split("/")[-1]
-            year_val, month_val, day_val = csv_fn.split('-')[1:4]
-            if len(year_val) == 4 and len(month_val) == 2 and len(day_val) == 2 and year_val.isdigit() and month_val.isdigit() and day_val.isdigit() and year_val >= '2000' and year_val <= '3000' and month_val >= '01' and month_val <= '12' and day_val >= '01' and day_val <= '31':
+            year_val, month_val, day_val = csv_fn.split("-")[1:4]
+            if (
+                len(year_val) == 4
+                and len(month_val) == 2
+                and len(day_val) == 2
+                and year_val.isdigit()
+                and month_val.isdigit()
+                and day_val.isdigit()
+                and year_val >= "2000"
+                and year_val <= "3000"
+                and month_val >= "01"
+                and month_val <= "12"
+                and day_val >= "01"
+                and day_val <= "31"
+            ):
                 key = f"openpowerlifting/year={year_val}/month={month_val}/day={day_val}/{csv_fn}"
             else:
                 key = DEFAULT_TARGET + csv_fn
