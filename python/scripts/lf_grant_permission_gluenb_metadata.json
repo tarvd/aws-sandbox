@@ -1,0 +1,20 @@
+{
+    "CatalogId": "820242901733",
+    "Principal": {
+        "DataLakePrincipalIdentifier": "arn:aws:iam::820242901733:role/dev-tedsand-glue-notebook-role"
+    },
+    "Resource": {
+        "Table": {
+            "CatalogId": "820242901733",
+            "DatabaseName": "metadata",
+            "TableWildcard": {}
+        }
+    },
+    "Permissions": [
+        "SELECT",
+        "INSERT",
+        "ALTER",
+        "DESCRIBE"
+    ],
+    "PermissionsWithGrantOption": []
+}
