@@ -88,3 +88,24 @@ resource "aws_glue_catalog_table" "openpowerlifting" {
 
 }
 
+resource "aws_glue_catalog_table" "processed_data_log" {
+  name          = "processsed_data_log"
+  database_name = aws_glue_catalog_database.metadata.name
+  table_type    = "EXTERNAL_TABLE"
+
+  parameters    = {
+    "format"            = "parquet"
+  }
+
+  open_table_format_input {
+    iceberg_input {
+      metadata_operation = "CREATE"
+    }
+  }
+
+
+  storage_descriptor {
+    location = "s3://dev-use2-tedsand-iceberg-s3/warehouse/metadata.db/processed_data_log/"
+
+  }
+}

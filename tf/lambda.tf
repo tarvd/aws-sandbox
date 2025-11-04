@@ -1,11 +1,14 @@
+data "aws_iam_policy" "AmazonS3FullAccess" {
+  arn = "arn:aws:iam::aws:policy/AmazonS3FullAccess"
+}
+
+data "aws_iam_policy" "AWSLambdaBasicExecutionRole" {
+  arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
 resource "aws_iam_role" "lambda_role" {
   name        = "dev-tedsand-lambda-role"
-  path        = "/service-role/"
   description = "Role for Lambda functions"
-  managed_policy_arns = [
-    "arn:aws:iam::aws:policy/AmazonS3FullAccess",
-    "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
-  ]
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -19,6 +22,17 @@ resource "aws_iam_role" "lambda_role" {
     ]
   })
 }
+
+resource "aws_iam_role_policy_attachment" "lambda-role-s3-policy-attach" {
+  role       = "${aws_iam_role.lambda_role.name}"
+  policy_arn = "${data.aws_iam_policy.AmazonS3FullAccess.arn}"
+}
+
+resource "aws_iam_role_policy_attachment" "lambda-role-lambda-policy-attach" {
+  role       = "${aws_iam_role.lambda_role.name}"
+  policy_arn = "${data.aws_iam_policy.AWSLambdaBasicExecutionRole.arn}"
+}
+
 
 resource "aws_lambda_function" "openpowerlifting_ingest" {
   function_name    = "dev-use2-tedsand-openpowerlifting-ingest-lambda"
