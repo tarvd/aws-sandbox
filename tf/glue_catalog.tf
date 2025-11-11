@@ -1,68 +1,59 @@
 resource "aws_glue_catalog_database" "raw" {
-  name = "raw"
+  name = var.glue_database_raw.name
   create_table_default_permission {
-    permissions = ["SELECT"]
+    permissions = var.glue_database_raw.default_permissions
     principal {
-      data_lake_principal_identifier = "IAM_ALLOWED_PRINCIPALS"
+      data_lake_principal_identifier = var.glue_database_raw.lf_principal
     }
   }
 }
 
 resource "aws_glue_catalog_database" "cleansed" {
-  name = "cleansed"
+  name = var.glue_database_cleansed.name
   create_table_default_permission {
-    permissions = ["SELECT"]
+    permissions = var.glue_database_cleansed.default_permissions
     principal {
-      data_lake_principal_identifier = "IAM_ALLOWED_PRINCIPALS"
+      data_lake_principal_identifier = var.glue_database_cleansed.lf_principal
     }
   }
 }
 
 resource "aws_glue_catalog_database" "metadata" {
-  name = "metadata"
+  name = var.glue_database_metadata.name
   create_table_default_permission {
-    permissions = ["SELECT"]
+    permissions = var.glue_database_metadata.default_permissions
     principal {
-      data_lake_principal_identifier = "IAM_ALLOWED_PRINCIPALS"
+      data_lake_principal_identifier = var.glue_database_metadata.lf_principal
     }
   }
 }
 
 resource "aws_glue_catalog_table" "openpowerlifting" {
-  name          = "openpowerlifting"
+  name          = var.glue_table_openpowerlifting_raw.name
   database_name = aws_glue_catalog_database.raw.name
-  table_type    = "EXTERNAL_TABLE"
+  table_type    = var.glue_table_openpowerlifting_raw.table_type
 
   parameters = {
-    classification = "csv"
-    "skip.header.line.count" = "1" 
+    classification = var.glue_table_openpowerlifting_raw.classification
+    "skip.header.line.count" = var.glue_table_openpowerlifting_raw.skip_header_line_count
   }
 
   storage_descriptor {
-    location      = "s3://${aws_s3_bucket.raw_data.bucket}/openpowerlifting/"
-    input_format  = "org.apache.hadoop.mapred.TextInputFormat"
-    output_format = "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat"
-    compressed    = false
+    location      = "s3://${aws_s3_bucket.raw_data.bucket}/${var.glue_table_openpowerlifting_raw.s3_prefix}/"
+    input_format  = var.glue_table_openpowerlifting_raw.input_format
+    output_format = var.glue_table_openpowerlifting_raw.output_format
+    compressed    = var.glue_table_openpowerlifting_raw.compressed
 
     ser_de_info {
-      serialization_library = "org.apache.hadoop.hive.serde2.OpenCSVSerde"
+      serialization_library = var.glue_table_openpowerlifting_raw.serialization_library
 
       parameters = {
-        "separatorChar" = ","
+        "separatorChar" = "${var.glue_table_openpowerlifting_raw.separation_char}"
       }
     }
 
     dynamic "columns" {
-      for_each = [
-        "name", "sex", "event", "equipment", "age", "ageclass", "birthyearclass",
-        "division", "bodyweightkg", "weightclasskg", "squat1kg", "squat2kg",
-        "squat3kg", "squat4kg", "best3squatkg", "bench1kg", "bench2kg", "bench3kg",
-        "bench4kg", "best3benchkg", "deadlift1kg", "deadlift2kg", "deadlift3kg",
-        "deadlift4kg", "best3deadliftkg", "totalkg", "place", "dots", "wilks",
-        "glossbrenner", "goodlift", "tested", "country", "state", "federation",
-        "parentfederation", "date", "meetcountry", "meetstate", "meettown",
-        "meetname", "sanctioned"
-      ]
+      for_each = var.glue_table_openpowerlifting_raw.column_list
       content {
         name    = columns.value
         type    = "string"
@@ -71,41 +62,12 @@ resource "aws_glue_catalog_table" "openpowerlifting" {
     }
   }
 
-  partition_keys {
-    name = "year"
-    type = "string"
-  }
-
-  partition_keys {
-    name = "month"
-    type = "string"
-  }
-
-  partition_keys {
-    name = "day"
-    type = "string"
+  dynamic "partition_keys" {
+    for_each = var.glue_table_openpowerlifting_raw.partition_column_list
+    content {
+      name = partition_keys.value
+      type = "string"
+    }
   }
 
 }
-
-# resource "aws_glue_catalog_table" "processed_data_log" {
-#   name          = "processsed_data_log"
-#   database_name = aws_glue_catalog_database.metadata.name
-#   table_type    = "EXTERNAL_TABLE"
-
-#   parameters    = {
-#     "format"            = "parquet"
-#   }
-
-#   open_table_format_input {
-#     iceberg_input {
-#       metadata_operation = "CREATE"
-#     }
-#   }
-
-
-#   storage_descriptor {
-#     location = "s3://dev-use2-tedsand-iceberg-s3/warehouse/metadata.db/processed_data_log/"
-
-#   }
-# }

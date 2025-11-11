@@ -70,6 +70,85 @@ variable "eventbridge_target_new_data_openpowerlifting_id" {
 }
 
 
+# Glue catalog databases and tables
+
+variable "glue_database_raw" {
+  type = object({
+    name = string
+    default_permissions = list(string)
+    lf_principal = string
+  })
+}
+
+variable "glue_database_cleansed" {
+  type = object({
+    name = string
+    default_permissions = list(string)
+    lf_principal = string
+  })
+}
+
+variable "glue_database_metadata" {
+  type = object({
+    name = string
+    default_permissions = list(string)
+    lf_principal = string
+  })
+}
+
+variable "glue_table_openpowerlifting_raw" {
+  type = object({
+    name = string
+    table_type = string
+    classification = string
+    skip_header_line_count = string
+    s3_prefix = string
+    input_format = string
+    output_format = string
+    compressed = bool
+    serialization_library = string
+    separation_char = string
+    column_list = list(string)
+    partition_column_list = list(string)
+  })
+}
+
+
+# Glue ETL jobs, workflows, and triggers
+
+variable "glue_job_openpowerlifting_cleanse" {
+  type = object({
+    name              = string
+    description       = string
+    glue_version      = string
+    max_retries       = number
+    timeout           = number
+    number_of_workers = number
+    worker_type       = string
+    execution_class   = string
+    script_path       = string
+    default_arguments = map(string)
+  })
+}
+
+variable "glue_workflow_openpowerlifting" {
+  type = object({
+    name = string
+    description = string
+    max_concurrent_runs = number
+  })
+}
+
+variable "glue_trigger_openpowerlifting_cleanse" {
+  type = object({
+    name = string
+    type = string
+    batch_size = number
+    batch_window = number
+  })
+}
+
+
 
 
 

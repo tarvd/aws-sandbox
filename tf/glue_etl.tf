@@ -1,47 +1,31 @@
 resource "aws_glue_job" "openpowerlifting_cleanse_job" {
-  name     = "dev-use2-tedsand-openpowerlifting-cleanse-job"
-  description       = "Job to source data from Openpowerlifting Raw Data to Iceberg Cleansed Table"
+  name              = var.glue_job_openpowerlifting_cleanse.name
+  description       = var.glue_job_openpowerlifting_cleanse.description
   role_arn          = aws_iam_role.glue_job_role.arn
-  glue_version      = "5.0"
-  max_retries       = 0
-  timeout           = 30
-  number_of_workers = 4
-  worker_type       = "G.1X"
-  execution_class   = "STANDARD"
+  glue_version      = var.glue_job_openpowerlifting_cleanse.glue_version
+  max_retries       = var.glue_job_openpowerlifting_cleanse.max_retries
+  timeout           = var.glue_job_openpowerlifting_cleanse.timeout
+  number_of_workers = var.glue_job_openpowerlifting_cleanse.number_of_workers
+  worker_type       = var.glue_job_openpowerlifting_cleanse.worker_type
+  execution_class   = var.glue_job_openpowerlifting_cleanse.execution_class
 
   command {
-    name            = "glueetl"  # or "pythonshell" if Python script
-    script_location = "s3://${aws_s3_bucket.python.bucket}/glue/openpowerlifting_cleanse_job.py"
+    name            = "glueetl"
+    script_location = "s3://${aws_s3_bucket.python.bucket}/${var.glue_job_openpowerlifting_cleanse.script_path}"
   }
 
-  default_arguments = {
-    "--job-language"                     = "python"
-    "--continuous-log-logGroup"          = "/aws-glue/jobs"
-    "--enable-continuous-cloudwatch-log" = "true"
-    "--enable-continuous-log-filter"     = "true"
-    "--enable-auto-scaling"              = "false"
-    "--conf"                             = "spark.sql.extensions=org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions --conf spark.sql.catalog.glue_catalog=org.apache.iceberg.spark.SparkCatalog --conf spark.sql.catalog.glue_catalog.warehouse=s3://dev-use2-tedsand-iceberg-s3/warehouse/ --conf spark.sql.catalog.glue_catalog.catalog-impl=org.apache.iceberg.aws.glue.GlueCatalog --conf spark.sql.catalog.glue_catalog.io-impl=org.apache.iceberg.aws.s3.S3FileIO"
-    "--datalake-formats"                 = "iceberg"
-    "--job-bookmark-option"              = "job-bookmark-disable"
-    "--TempDir"                          = "s3://aws-glue-assets-${var.aws_account_id}-us-east-2/temp/"
-    "--enable-glue-datacatalog"          = "true"
-    "--enable-job-insights"              = "true"
-    "--enable-metrics"                   = "true"
-    "--enable-spark-ui"                  = "true"
-    "--spark-event-logs-path"            = "s3://${aws_s3_bucket.logs.id}/spark-ui/"
-  }
-
+  default_arguments = var.glue_job_openpowerlifting_cleanse.default_arguments
 }
 
 resource "aws_glue_workflow" "openpowerlifting" {
-  name = "dev-use2-tedsand-openpowerlifting-wf"
-  description = "Glue workflow to process Openpowerlifting.org data"
-  max_concurrent_runs = 1
+  name = var.glue_workflow_openpowerlifting.name
+  description = var.glue_workflow_openpowerlifting.description
+  max_concurrent_runs = var.glue_workflow_openpowerlifting.max_concurrent_runs
 }
 
 resource "aws_glue_trigger" "openpowerlifting" {
-  name          = "dev-use2-tedsand-openpowerlifting-cleanse-tr"
-  type          = "EVENT"
+  name          = var.glue_trigger_openpowerlifting_cleanse.name
+  type          = var.glue_trigger_openpowerlifting_cleanse.type
   workflow_name = aws_glue_workflow.openpowerlifting.name
 
   actions {
@@ -49,8 +33,8 @@ resource "aws_glue_trigger" "openpowerlifting" {
   }
 
   event_batching_condition {
-    batch_size    = 5
-    batch_window  = 60
+    batch_size    = var.glue_trigger_openpowerlifting_cleanse.batch_size
+    batch_window  = var.glue_trigger_openpowerlifting_cleanse.batch_window
   }
 
 }
