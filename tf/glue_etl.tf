@@ -40,10 +40,17 @@ resource "aws_glue_workflow" "openpowerlifting" {
 }
 
 resource "aws_glue_trigger" "openpowerlifting" {
-  name = "dev-use2-tedsand-openpowerlifting-cleanse-tr"
-  type = "EVENT"
+  name          = "dev-use2-tedsand-openpowerlifting-cleanse-tr"
+  type          = "EVENT"
   workflow_name = aws_glue_workflow.openpowerlifting.name
+
   actions {
     job_name = aws_glue_job.openpowerlifting_cleanse_job.name
   }
+
+  event_batching_condition {
+    batch_size    = 5
+    batch_window  = 60
+  }
+
 }
