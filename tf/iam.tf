@@ -1,9 +1,9 @@
 resource "aws_iam_group" "admin" {
-  name = "admin"
+  name = var.iam_group_admin_name
 }
 
 resource "aws_iam_user" "tdouglas" {
-  name = "tdouglas"
+  name = var.iam_user_admin_name
 
   tags = merge(
     local.tags,
@@ -12,7 +12,9 @@ resource "aws_iam_user" "tdouglas" {
 }
 
 resource "aws_iam_role" "glue_job_role" {
-  name = "dev-tedsand-glue-job-role"
+  name = var.iam_role_glue_job.name
+  description = var.iam_role_glue_job.description
+
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
     Statement = [{
@@ -26,7 +28,9 @@ resource "aws_iam_role" "glue_job_role" {
 }
 
 resource "aws_iam_role" "glue_notebook_role" {
-  name = "dev-tedsand-glue-notebook-role"
+  name = var.iam_role_glue_notebook.name 
+  description = var.iam_role_glue_notebook.description
+
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
     Statement = [{
@@ -40,8 +44,8 @@ resource "aws_iam_role" "glue_notebook_role" {
 }
 
 resource "aws_iam_policy" "glue_job_policy" {
-  name        = "dev-tedsand-glue-job-policy"
-  description = "Policy for Glue job to access S3 bucket and Glue Data Catalog"
+  name        = var.iam_policy_glue_job.name
+  description = var.iam_policy_glue_job.description
 
   policy = jsonencode({
     Version = "2012-10-17",
@@ -49,7 +53,7 @@ resource "aws_iam_policy" "glue_job_policy" {
       {
         Effect   = "Allow"
         Action   = [
-          "glue:*"                     # Or restrict to create/update/get tables/databases if you want
+          "glue:*"
         ]
         Resource = "*"
       },
@@ -117,8 +121,8 @@ resource "aws_iam_role_policy_attachment" "glue_job_attach" {
 }
 
 resource "aws_iam_policy" "glue_notebook_policy" {
-  name        = "glue-notebook-policy"
-  description = "Policy for AWS Glue notebooks to read/write S3 and access Glue resources"
+  name        = var.iam_policy_glue_notebook.name
+  description = var.iam_policy_glue_notebook.description
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -234,8 +238,9 @@ data "aws_iam_policy" "AWSLambdaBasicExecutionRole" {
 }
 
 resource "aws_iam_role" "lambda_role" {
-  name        = "dev-tedsand-lambda-role"
-  description = "Role for Lambda functions"
+  name        = var.iam_role_lambda.name
+  description = var.iam_role_lambda.description
+
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -261,7 +266,8 @@ resource "aws_iam_role_policy_attachment" "lambda-role-lambda-policy-attach" {
 }
 
 resource "aws_iam_role" "eb_start_workflow" {
-  name = "dev-tedsand-eb-start-workflow-role"
+  name = var.iam_role_eventbridge_start_workflow.name 
+  description = var.iam_role_eventbridge_start_workflow.description
   path = "/service-role/"
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
@@ -283,7 +289,8 @@ resource "aws_iam_role" "eb_start_workflow" {
 }
 
 resource "aws_iam_policy" "eb_start_workflow" {
-  name        = "dev-tedsand-eb-start-workflow-policy"
+  name        = var.iam_policy_eventbridge_start_workflow.name 
+  description = var.iam_policy_eventbridge_start_workflow.description
   policy = jsonencode({
     "Version": "2012-10-17",
     "Statement": [

@@ -149,6 +149,66 @@ variable "glue_trigger_openpowerlifting_cleanse" {
 }
 
 
+# IAM groups, users, roles, and policies
+
+variable "iam_group_admin_name" {
+  type = string
+}
+
+variable "iam_user_admin_name" {
+  type = string
+}
+
+variable "iam_role_glue_job" {
+  type = object({
+    name = string
+    description = string
+  })
+}
+
+variable "iam_role_glue_notebook" {
+  type = object({
+    name = string
+    description = string
+  })
+}
+
+variable "iam_role_lambda" {
+  type = object({
+    name = string
+    description = string
+  })
+}
+
+variable "iam_role_eventbridge_start_workflow" {
+  type = object({
+    name = string
+    description = string
+  })
+}
+
+variable "iam_policy_glue_job" {
+  type = object({
+    name = string
+    description = string
+  })
+}
+
+variable "iam_policy_glue_notebook" {
+  type = object({
+    name = string
+    description = string
+  })
+}
+
+variable "iam_policy_eventbridge_start_workflow" {
+  type = object({
+    name = string
+    description = string
+  })
+}
+
+
 
 
 
