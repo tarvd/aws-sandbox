@@ -1,4 +1,4 @@
-CREATE TABLE cleansed.openpowerlifting_test (
+CREATE TABLE cleansed.openpowerlifting (
   name string,
   sex string,
   event string,
@@ -50,7 +50,7 @@ CREATE TABLE cleansed.openpowerlifting_test (
   job_run_id string
  ) 
 PARTITIONED BY (bucket(16, row_hash)) 
-LOCATION 's3://dev-use2-tedsand-iceberg-s3/warehouse/cleansed.db/openpowerlifting_test' 
+LOCATION 's3://dev-use2-tedsand-iceberg-s3/warehouse/cleansed.db/openpowerlifting' 
 TBLPROPERTIES (
   'table_type'='ICEBERG',
   'format'='parquet',
