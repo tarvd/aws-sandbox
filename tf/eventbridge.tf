@@ -9,8 +9,8 @@ resource "aws_cloudwatch_event_rule" "daily" {
 }
 
 resource "aws_cloudwatch_event_rule" "openpowerlifting" {
-  name                = var.eventbridge_target_new_data_openpowerlifting.name
-  description         = var.eventbridge_target_new_data_openpowerlifting.description
+  name                = var.eventbridge_rule_new_data_openpowerlifting.name
+  description         = var.eventbridge_rule_new_data_openpowerlifting.description
   event_pattern       = jsonencode(
     {
         "source": ["aws.s3"],
