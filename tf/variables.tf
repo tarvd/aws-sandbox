@@ -15,8 +15,23 @@ variable "env" {
   default = "dev"
 }
 
+variable "region" {
+  type    = string 
+  default = "us-east-2"
+}
 
-# Athena vars
+variable "region_short_code" {
+  type    = string 
+  default = "use2"
+}
+
+variable "project" {
+  type    = string 
+  default = "tedsand"
+}
+
+
+# Athena workgroups
 
 variable "athena_workgroup_primary" {
   type = object({
@@ -26,6 +41,38 @@ variable "athena_workgroup_primary" {
     encryption_option = string
   })
 }
+
+
+# Eventbridge rules and targets
+
+variable "eventbridge_rule_daily" {
+  type = object({
+    name = string
+    description = string
+    schedule_expression = string
+  })
+}
+
+variable "eventbridge_rule_new_data_openpowerlifting" {
+  type = object({
+    name = string
+    description = string
+    prefix = string
+  })
+}
+
+variable "eventbridge_target_schedule_openpowerlifting_id" {
+  type = string
+}
+
+variable "eventbridge_target_new_data_openpowerlifting_id" {
+  type = string
+}
+
+
+
+
+
 
 variable "lambda_openpowerlifting_filename" {
   type    = string
