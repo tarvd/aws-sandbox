@@ -39,6 +39,7 @@ variable "athena_workgroup_primary" {
     enforce_workgroup_configuration = bool
     publish_cloudwatch_metrics_enabled = bool
     encryption_option = string
+    acl_option = string
   })
 }
 
@@ -126,6 +127,7 @@ variable "glue_job_openpowerlifting_cleanse" {
     number_of_workers = number
     worker_type       = string
     execution_class   = string
+    command           = string
     script_path       = string
     default_arguments = map(string)
   })

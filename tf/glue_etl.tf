@@ -10,7 +10,7 @@ resource "aws_glue_job" "openpowerlifting_cleanse_job" {
   execution_class   = var.glue_job_openpowerlifting_cleanse.execution_class
 
   command {
-    name            = "glueetl"
+    name            = var.glue_job_openpowerlifting_cleanse.command
     script_location = "s3://${aws_s3_bucket.python.bucket}/${var.glue_job_openpowerlifting_cleanse.script_path}"
   }
 
