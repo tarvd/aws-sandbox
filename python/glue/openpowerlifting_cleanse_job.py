@@ -2,6 +2,7 @@
 import sys
 import logging
 import boto3
+import traceback
 from datetime import datetime, timezone
 
 
@@ -90,11 +91,14 @@ def main():
         spark = glueContext.spark_session
         glue = boto3.client("glue")
         s3 = boto3.client("s3")
+        sns = boto3.client("sns")
 
-        args = getResolvedOptions(sys.argv, ["JOB_NAME"])
+        args = getResolvedOptions(sys.argv, ["JOB_NAME", "sns_topic_arn"])
         job_name = args["JOB_NAME"]
         job_id = args["JOB_ID"]
         job_run_id = args["JOB_RUN_ID"]
+        sns_topic_arn = args["sns_topic_arn"]
+        total_rows_processed = 0
 
         logger.info(f"Reading list of files for {SOURCE_DB}.{SOURCE_TABLE}")
 
@@ -125,6 +129,7 @@ def main():
                 f"s3://{source_bucket}/{path}"
                 for path in source_objects
                 if f"s3://{source_bucket}/{path}" not in skip_files_list
+                and path[-4:] == '.csv'
             ]
         )
 
@@ -203,10 +208,26 @@ def main():
                 "glue_catalog.metadata.processed_data_log"
             ).tableProperty("format-version", "2").append()
 
+            total_rows_processed += filtered_num_rows
+
         logger.info(f"Job {job_name} completed successfully")
 
+        sns.publish(
+            TopicArn = sns_topic_arn,
+            Subject = f"Glue Job Success - {job_name}",
+            Message = f"{job_name}\n\nFunction succeeded, {total_rows_processed} rows added to {TARGET_DB}.{TARGET_TABLE}"
+        )
+
     except Exception as e:
-        logger.error(f"Error: {e.message}")
+        logger.error(f"Error: {e}")
+
+        error_message = traceback.format_exc()
+        sns.publish(
+            TopicArn = sns_topic_arn,
+            Subject = f"Glue Job Failure Alert - {job_name}",
+            Message = f"{job_name}\n\nFunction failed:\n\n{error_message}"
+        )
+
         raise e
 
 

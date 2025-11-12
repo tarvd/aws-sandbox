@@ -65,6 +65,7 @@ variable "eventbridge_rule_new_data_openpowerlifting" {
     s3_bucket = string
     s3_prefix = string
     target_id = string
+    sns_target_id = string
   })
 }
 
@@ -201,7 +202,7 @@ variable "iam_role_eventbridge_start_workflow" {
   })
 }
 
-variable "iam_policy_publish_to_sns_name" {
+variable "iam_policy_lambda_results_publish_to_sns_name" {
   type = string
 }
 

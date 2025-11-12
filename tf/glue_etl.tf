@@ -7,7 +7,10 @@ resource "aws_glue_job" "openpowerlifting_cleanse_job" {
   number_of_workers = var.glue_job_openpowerlifting_cleanse.number_of_workers
   worker_type       = var.glue_job_openpowerlifting_cleanse.worker_type
   execution_class   = var.glue_job_openpowerlifting_cleanse.execution_class
-  default_arguments = var.glue_job_openpowerlifting_cleanse.default_arguments
+  default_arguments = merge(
+    var.glue_job_openpowerlifting_cleanse.default_arguments,
+    {"--sns_topic_arn" = aws_sns_topic.lambda_results.arn}
+  )
 
   command {
     name            = var.glue_job_openpowerlifting_cleanse.command

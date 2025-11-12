@@ -36,6 +36,12 @@ resource "aws_s3_bucket_versioning" "raw_data" {
   }
 }
 
+resource "aws_s3_bucket_notification" "bucket_notification" {
+  bucket      = aws_s3_bucket.raw_data.id
+  eventbridge = true
+}
+
+
 resource "aws_s3_bucket" "iceberg" {
   bucket = var.s3_bucket_iceberg.bucket
 }

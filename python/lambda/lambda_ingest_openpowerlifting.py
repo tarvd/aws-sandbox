@@ -84,7 +84,7 @@ def lambda_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
         sns.publish(
             TopicArn = SNS_TOPIC_ARN,
             Subject = f"Lambda Success - {LAMBDA}",
-            Message = f"{LAMBDA}\n\nFunction succeeded."
+            Message = f"{LAMBDA}\n\nFunction succeeded, {csv_file} added to s3://{BUCKET}/{key}"
         )
 
         return {"statusCode": 200, "message": "File ingested successfully."}

@@ -28,6 +28,11 @@ resource "aws_iam_role_policy_attachment" "glue_job_attach" {
   policy_arn = aws_iam_policy.glue_job_policy.arn
 }
 
+resource "aws_iam_role_policy_attachment" "glue-job-role-sns-policy-attach" {
+  role       = aws_iam_role.glue_job_role.name
+  policy_arn = aws_iam_policy.lambda_results_publish_to_sns.arn
+}
+
 resource "aws_iam_role" "glue_notebook_role" {
   name               = var.iam_role_glue_notebook.name 
   description        = var.iam_role_glue_notebook.description
@@ -74,8 +79,8 @@ resource "aws_iam_role_policy_attachment" "lambda-role-lambda-policy-attach" {
   policy_arn = data.aws_iam_policy.AWSLambdaBasicExecutionRole.arn
 }
 
-resource "aws_iam_policy" "publish_to_sns" {
-  name        = var.iam_policy_publish_to_sns_name
+resource "aws_iam_policy" "lambda_results_publish_to_sns" {
+  name        = var.iam_policy_lambda_results_publish_to_sns_name
   policy      = templatefile(
     var.iam_role_lambda.sns_policy_file,
     {
@@ -85,7 +90,7 @@ resource "aws_iam_policy" "publish_to_sns" {
 
 resource "aws_iam_role_policy_attachment" "lambda-role-sns-policy-attach" {
   role       = aws_iam_role.lambda_role.name
-  policy_arn = aws_iam_policy.publish_to_sns.arn
+  policy_arn = aws_iam_policy.lambda_results_publish_to_sns.arn
 }
 
 resource "aws_iam_role" "eb_start_workflow" {
@@ -102,4 +107,9 @@ resource "aws_iam_policy" "eb_start_workflow" {
 resource "aws_iam_role_policy_attachment" "eb_start_workflow" {
   role       = aws_iam_role.eb_start_workflow.name
   policy_arn = aws_iam_policy.eb_start_workflow.arn
+}
+
+resource "aws_iam_role_policy_attachment" "eventbridge_workflow_sns" {
+  role       = aws_iam_role.eb_start_workflow.name
+  policy_arn = aws_iam_policy.lambda_results_publish_to_sns.arn
 }

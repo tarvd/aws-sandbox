@@ -39,3 +39,20 @@ resource "aws_cloudwatch_event_target" "s3_openpowerlifting" {
   arn       = aws_glue_workflow.openpowerlifting.arn
   role_arn  = aws_iam_role.eb_start_workflow.arn
 }
+
+resource "aws_cloudwatch_event_target" "s3_openpowerlifting_sns" {
+  target_id = var.eventbridge_rule_new_data_openpowerlifting.sns_target_id
+  rule      = var.eventbridge_rule_new_data_openpowerlifting.name
+
+  input_transformer {
+    input_template = "\"New file uploaded to bucket <bucket_name> with key <object_key> at <event_time>\""
+    input_paths    = {
+      bucket_name = "$.detail.bucket.name"
+      object_key = "$.detail.object.key"
+      event_time = "$.time"
+    }
+  }
+  
+  arn       = aws_sns_topic.lambda_results.arn
+  role_arn  = aws_iam_role.eb_start_workflow.arn
+}
