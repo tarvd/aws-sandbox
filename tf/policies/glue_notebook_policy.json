@@ -4,7 +4,31 @@
       {
         "Effect": "Allow",
         "Action": [
-          "glue:*"
+          "glue:GetDatabase",
+          "glue:GetDatabases",
+          "glue:GetTable",
+          "glue:GetTables",
+          "glue:CreateTable",
+          "glue:UpdateTable",
+          "glue:DeleteTable",
+          "glue:GetPartition",
+          "glue:GetPartitions",
+          "glue:CreatePartition",
+          "glue:UpdatePartition",
+          "glue:DeletePartition",
+          "glue:GetConnection",
+          "glue:GetJob",
+          "glue:StartJobRun",
+          "glue:GetJobRun",
+          "glue:GetJobRuns",
+          "glue:BatchStopJobRun",
+          "glue:CreateSession",
+          "glue:GetSession",
+          "glue:GetSessions",
+          "glue:StopSession",
+          "glue:TagResource",
+          "glue:RunStatement",
+          "glue:GetStatement"
         ],
         "Resource": "*"
       },
