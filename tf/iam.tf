@@ -14,105 +14,25 @@ resource "aws_iam_user" "tdouglas" {
 resource "aws_iam_role" "glue_job_role" {
   name = var.iam_role_glue_job.name
   description = var.iam_role_glue_job.description
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [{
-      Effect    = "Allow"
-      Principal = {
-        Service = "glue.amazonaws.com"
-      }
-      Action = "sts:AssumeRole"
-    }]
-  })
+  assume_role_policy = "${file("./policies/glue_assume_role_policy.json")}"
 }
 
 resource "aws_iam_role" "glue_notebook_role" {
   name = var.iam_role_glue_notebook.name 
   description = var.iam_role_glue_notebook.description
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [{
-      Effect    = "Allow"
-      Principal = {
-        Service = "glue.amazonaws.com"
-      }
-      Action = "sts:AssumeRole"
-    }]
-  })
+  assume_role_policy = "${file("./policies/glue_assume_role_policy.json")}"
 }
 
 resource "aws_iam_policy" "glue_job_policy" {
   name        = var.iam_policy_glue_job.name
   description = var.iam_policy_glue_job.description
-
-  policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Effect   = "Allow"
-        Action   = [
-          "glue:*"
-        ]
-        Resource = "*"
-      },
-      {
-        Effect   = "Allow"
-        Action   = [
-          "s3:GetObject",
-          "s3:PutObject",
-          "s3:ListBucket",
-          "s3:DeleteObject"
-        ]
-        Resource = [
-          "arn:aws:s3:::${aws_s3_bucket.python.bucket}",
-          "arn:aws:s3:::${aws_s3_bucket.python.bucket}/glue/*",
-          "arn:aws:s3:::${aws_s3_bucket.raw_data.bucket}",
-          "arn:aws:s3:::${aws_s3_bucket.raw_data.bucket}/*",
-          "arn:aws:s3:::${aws_s3_bucket.iceberg.bucket}",
-          "arn:aws:s3:::${aws_s3_bucket.iceberg.bucket}/*"
-        ]
-      },
-
-      # --- CloudWatch Logs for notebook output ---
-      {
-        Effect = "Allow"
-        Action = [
-          "logs:CreateLogGroup",
-          "logs:CreateLogStream",
-          "logs:PutLogEvents"
-        ]
-        Resource = "arn:aws:logs:*:*:*"
-      },
-
-      # --- EC2 networking for Glue job runtime ---
-      {
-        Effect = "Allow"
-        Action = [
-          "ec2:CreateNetworkInterface",
-          "ec2:DeleteNetworkInterface",
-          "ec2:DescribeNetworkInterfaces",
-          "ec2:DescribeSubnets",
-          "ec2:DescribeSecurityGroups",
-          "ec2:DescribeVpcs"
-        ]
-        Resource = "*"
-      },
-
-      # --- IAM PassRole so Glue can use this role ---
-      {
-        Effect = "Allow"
-        Action = "iam:PassRole"
-        Resource = "*"
-        Condition = {
-          StringEquals = {
-            "iam:PassedToService" = "glue.amazonaws.com"
-          }
-        }
-      }
-    ]
-  })
+  policy = templatefile(
+    "./policies/glue_job_policy.json.tpl",
+    {
+      python_s3_bucket = "${aws_s3_bucket.python.bucket}"
+      raw_data_s3_bucket = "${aws_s3_bucket.raw_data.bucket}"
+      iceberg_s3_bucket = "${aws_s3_bucket.iceberg.bucket}"
+    })
 }
 
 resource "aws_iam_role_policy_attachment" "glue_job_attach" {
