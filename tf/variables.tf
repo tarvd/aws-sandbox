@@ -3,11 +3,14 @@
 
 variable "aws_account_id" {
   type    = string
-  default = "820242901733"
   validation {
     condition     = can(regex("^[0-9]{12}$", var.aws_account_id))
     error_message = "AWS Account ID must be a 12-digit number"
   }
+}
+
+variable "sns_email" {
+  type    = string
 }
 
 variable "env" {
@@ -184,6 +187,7 @@ variable "iam_role_lambda" {
     name                    = string
     description             = string
     assume_role_policy_file = string
+    sns_policy_file         = string
   })
 }
 
@@ -197,16 +201,26 @@ variable "iam_role_eventbridge_start_workflow" {
   })
 }
 
+variable "iam_policy_publish_to_sns_name" {
+  type = string
+}
 
 # Lambda functions
 
-variable "lambda_openpowerlifting_filename" {
+variable "lambda_openpowerlifting_py_file" {
   type    = string
   validation {
-    condition     = can(regex("\\.zip$", var.lambda_openpowerlifting_filename))
+    condition     = can(regex("\\.py$", var.lambda_openpowerlifting_py_file))
+    error_message = "Filename must be a .py file"
+  }
+}
+
+variable "lambda_openpowerlifting_archive" {
+  type    = string
+  validation {
+    condition     = can(regex("\\.zip$", var.lambda_openpowerlifting_archive))
     error_message = "Filename must be a .zip file"
   }
-
 }
 
 variable "lambda_openpowerlifting_handler" {
@@ -225,6 +239,8 @@ variable "lambda_function_openpowerlifting" {
     memory_size      = number
     publish          = bool
     timeout          = number
+    url              = string
+    s3_prefix        = string
   })
 }
 
@@ -294,5 +310,16 @@ variable "s3_bucket_logs" {
     ignore_public_acls      = bool
     restrict_public_buckets = bool
     bucket_versioning_status = string
+  })
+}
+
+
+# SNS topics
+
+variable "sns_topic_lambda_results" {
+  type = object({
+    name         = string
+    display_name = string
+    policy_file  = string
   })
 }

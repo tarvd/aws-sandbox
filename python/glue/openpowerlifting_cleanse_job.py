@@ -1,3 +1,4 @@
+
 import sys
 import logging
 import boto3
@@ -126,6 +127,10 @@ def main():
                 if f"s3://{source_bucket}/{path}" not in skip_files_list
             ]
         )
+
+        if len(source_file_list) == 0:
+            logger.info("No new data to process, ending job.")
+            return
 
         logger.info(f"Files to process: {source_file_list}")
 

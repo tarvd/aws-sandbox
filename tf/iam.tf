@@ -74,6 +74,20 @@ resource "aws_iam_role_policy_attachment" "lambda-role-lambda-policy-attach" {
   policy_arn = data.aws_iam_policy.AWSLambdaBasicExecutionRole.arn
 }
 
+resource "aws_iam_policy" "publish_to_sns" {
+  name        = var.iam_policy_publish_to_sns_name
+  policy      = templatefile(
+    var.iam_role_lambda.sns_policy_file,
+    {
+      sns_topic_arn   = aws_sns_topic.lambda_results.arn
+    })
+}
+
+resource "aws_iam_role_policy_attachment" "lambda-role-sns-policy-attach" {
+  role       = aws_iam_role.lambda_role.name
+  policy_arn = aws_iam_policy.publish_to_sns.arn
+}
+
 resource "aws_iam_role" "eb_start_workflow" {
   name               = var.iam_role_eventbridge_start_workflow.name 
   description        = var.iam_role_eventbridge_start_workflow.description

@@ -1,10 +1,5 @@
 resource "aws_s3_bucket" "athena_results" {
   bucket = var.s3_bucket_athena.bucket
-
-  tags = merge(
-    local.tags,
-    { name = "athena-s3" }
-  )
 }
 
 resource "aws_s3_bucket_public_access_block" "athena_results" {
@@ -24,11 +19,6 @@ resource "aws_s3_bucket_versioning" "athena_results" {
 
 resource "aws_s3_bucket" "raw_data" {
   bucket = var.s3_bucket_raw_data.bucket
-
-  tags = merge(
-    local.tags,
-    { name = "data-s3" }
-  )
 }
 
 resource "aws_s3_bucket_public_access_block" "raw_data" {
@@ -48,11 +38,6 @@ resource "aws_s3_bucket_versioning" "raw_data" {
 
 resource "aws_s3_bucket" "iceberg" {
   bucket = var.s3_bucket_iceberg.bucket
-
-  tags = merge(
-    local.tags,
-    { name = "iceberg-s3" }
-  )
 }
 
 resource "aws_s3_bucket_public_access_block" "iceberg" {
@@ -72,11 +57,6 @@ resource "aws_s3_bucket_versioning" "iceberg" {
 
 resource "aws_s3_bucket" "python" {
   bucket = var.s3_bucket_python.bucket
-
-  tags = merge(
-    local.tags,
-    { name = "lambda-s3" }
-  )
 }
 
 resource "aws_s3_bucket_public_access_block" "python" {
@@ -96,11 +76,6 @@ resource "aws_s3_bucket_versioning" "python" {
 
 resource "aws_s3_bucket" "terraform" {
   bucket = var.s3_bucket_terraform.bucket
-
-  tags = merge(
-    local.tags,
-    { name = "terraform-s3" }
-  )
 }
 
 resource "aws_s3_bucket_public_access_block" "terraform" {
@@ -120,11 +95,6 @@ resource "aws_s3_bucket_versioning" "terraform" {
 
 resource "aws_s3_bucket" "logs" {
   bucket = var.s3_bucket_logs.bucket
-
-  tags = merge(
-    local.tags,
-    { name = "logs-s3" }
-  )
 }
 
 resource "aws_s3_bucket_public_access_block" "logs" {

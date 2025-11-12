@@ -1,0 +1,27 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "SNS:Publish",
+        "SNS:RemovePermission",
+        "SNS:SetTopicAttributes",
+        "SNS:DeleteTopic",
+        "SNS:ListSubscriptionsByTopic",
+        "SNS:GetTopicAttributes",
+        "SNS:AddPermission",
+        "SNS:Subscribe"
+      ],
+      "Principal": {
+        "AWS": "*"
+      },
+      "Condition": {
+        "StringEquals": {
+          "AWS:SourceAccount": "${aws_account_id}"
+        }
+      },
+      "Resource": "*"
+    }
+  ]
+}

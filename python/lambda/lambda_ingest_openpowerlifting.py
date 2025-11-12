@@ -1,5 +1,8 @@
-from typing import Any
+import os
 import logging
+import traceback
+
+from typing import Any
 from zipfile import ZipFile
 from io import BytesIO
 from datetime import datetime
@@ -7,11 +10,17 @@ from datetime import datetime
 import boto3
 import requests
 
-
-URL = "https://openpowerlifting.gitlab.io/opl-csv/files/openpowerlifting-latest.zip"
-BUCKET = "dev-use2-tedsand-raw-data-s3"
+BUCKET = os.environ["BUCKET"]
+LAMBDA = os.environ["LAMBDA"]
+PREFIX = os.environ["PREFIX"]
+SNS_TOPIC_ARN = os.environ["SNS_TOPIC_ARN"]
+URL = os.environ["URL"]
 TODAY = datetime.now()
 DEFAULT_TARGET = f"openpowerlifting/year={TODAY.strftime('%Y')}/month={TODAY.strftime('%m')}/day={TODAY.strftime('%d')}/"
+
+
+s3 = boto3.client("s3")
+sns = boto3.client("sns")
 
 
 def lambda_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
@@ -34,7 +43,6 @@ def lambda_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
         f"Lambda function for Openpowerlifting data ingestion started. URL: {URL}, Bucket: {BUCKET}"
     )
 
-    s3 = boto3.client("s3")
 
     try:
         response = requests.get(URL)
@@ -71,10 +79,26 @@ def lambda_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
         logger.info(
             "Lambda function for Openpowerlifting data ingestion ended: Success!"
         )
+
+        
+        sns.publish(
+            TopicArn = SNS_TOPIC_ARN,
+            Subject = f"Lambda Success - {LAMBDA}",
+            Message = f"{LAMBDA}\n\nFunction succeeded."
+        )
+
         return {"statusCode": 200, "message": "File ingested successfully."}
 
     except Exception as e:
         logger.error(
             f"Lambda function for Openpowerlifting data ingestion ended: Failure. {str(e)}"
         )
-        return {"statusCode": 500, "message": "File ingestion failed."}
+
+        error_message = traceback.format_exc()
+        sns.publish(
+            TopicArn = SNS_TOPIC_ARN,
+            Subject = f"Lambda Failure Alert - {LAMBDA}",
+            Message = f"{LAMBDA}\n\nFunction failed:\n\n{error_message}"
+        )
+
+        return {"statusCode": 500, "message": f"File ingestion failed, {error_message}"}
