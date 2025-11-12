@@ -4,34 +4,22 @@ resource "aws_iam_group" "admin" {
 
 resource "aws_iam_user" "tdouglas" {
   name = var.iam_user_admin_name
-
-  tags = merge(
-    local.tags,
-    { name = "tdouglas-iam-user" }
-  )
 }
 
 resource "aws_iam_role" "glue_job_role" {
-  name = var.iam_role_glue_job.name
-  description = var.iam_role_glue_job.description
-  assume_role_policy = "${file("./policies/glue_assume_role_policy.json")}"
-}
-
-resource "aws_iam_role" "glue_notebook_role" {
-  name = var.iam_role_glue_notebook.name 
-  description = var.iam_role_glue_notebook.description
-  assume_role_policy = "${file("./policies/glue_assume_role_policy.json")}"
+  name               = var.iam_role_glue_job.name
+  description        = var.iam_role_glue_job.description
+  assume_role_policy = "${file(var.iam_role_glue_job.assume_role_policy_file)}"
 }
 
 resource "aws_iam_policy" "glue_job_policy" {
-  name        = var.iam_policy_glue_job.name
-  description = var.iam_policy_glue_job.description
-  policy = templatefile(
-    "./policies/glue_job_policy.json",
+  name        = var.iam_role_glue_job.policy_name
+  policy      = templatefile(
+    var.iam_role_glue_job.policy_file,
     {
-      python_s3_bucket = "${aws_s3_bucket.python.bucket}"
+      python_s3_bucket   = "${aws_s3_bucket.python.bucket}"
       raw_data_s3_bucket = "${aws_s3_bucket.raw_data.bucket}"
-      iceberg_s3_bucket = "${aws_s3_bucket.iceberg.bucket}"
+      iceberg_s3_bucket  = "${aws_s3_bucket.iceberg.bucket}"
     })
 }
 
@@ -40,15 +28,20 @@ resource "aws_iam_role_policy_attachment" "glue_job_attach" {
   policy_arn = aws_iam_policy.glue_job_policy.arn
 }
 
+resource "aws_iam_role" "glue_notebook_role" {
+  name               = var.iam_role_glue_notebook.name 
+  description        = var.iam_role_glue_notebook.description
+  assume_role_policy = "${file(var.iam_role_glue_notebook.assume_role_policy_file)}"
+}
+
 resource "aws_iam_policy" "glue_notebook_policy" {
-  name        = var.iam_policy_glue_notebook.name
-  description = var.iam_policy_glue_notebook.description
-  policy = templatefile(
-    "./policies/glue_notebook_policy.json",
+  name        = var.iam_role_glue_notebook.policy_name
+  policy      = templatefile(
+    var.iam_role_glue_notebook.policy_file,
     {
-      python_s3_bucket = "${aws_s3_bucket.python.bucket}"
-      raw_data_s3_bucket = "${aws_s3_bucket.raw_data.bucket}"
-      iceberg_s3_bucket = "${aws_s3_bucket.iceberg.bucket}"
+      python_s3_bucket   = aws_s3_bucket.python.bucket
+      raw_data_s3_bucket = aws_s3_bucket.raw_data.bucket
+      iceberg_s3_bucket  = aws_s3_bucket.iceberg.bucket
     })
 }
 
@@ -57,43 +50,42 @@ resource "aws_iam_role_policy_attachment" "glue_notebook_attach" {
   policy_arn = aws_iam_policy.glue_notebook_policy.arn
 }
 
+resource "aws_iam_role" "lambda_role" {
+  name        = var.iam_role_lambda.name
+  description = var.iam_role_lambda.description
+  assume_role_policy = "${file(var.iam_role_lambda.assume_role_policy_file)}"
+}
+
 data "aws_iam_policy" "AmazonS3FullAccess" {
   arn = "arn:aws:iam::aws:policy/AmazonS3FullAccess"
+}
+
+resource "aws_iam_role_policy_attachment" "lambda-role-s3-policy-attach" {
+  role       = aws_iam_role.lambda_role.name
+  policy_arn = data.aws_iam_policy.AmazonS3FullAccess.arn
 }
 
 data "aws_iam_policy" "AWSLambdaBasicExecutionRole" {
   arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
-resource "aws_iam_role" "lambda_role" {
-  name        = var.iam_role_lambda.name
-  description = var.iam_role_lambda.description
-  assume_role_policy = "${file("./policies/lambda_assume_role_policy.json")}"
-}
-
-resource "aws_iam_role_policy_attachment" "lambda-role-s3-policy-attach" {
-  role       = "${aws_iam_role.lambda_role.name}"
-  policy_arn = "${data.aws_iam_policy.AmazonS3FullAccess.arn}"
-}
-
 resource "aws_iam_role_policy_attachment" "lambda-role-lambda-policy-attach" {
-  role       = "${aws_iam_role.lambda_role.name}"
-  policy_arn = "${data.aws_iam_policy.AWSLambdaBasicExecutionRole.arn}"
+  role       = aws_iam_role.lambda_role.name
+  policy_arn = data.aws_iam_policy.AWSLambdaBasicExecutionRole.arn
 }
 
 resource "aws_iam_role" "eb_start_workflow" {
-  name = var.iam_role_eventbridge_start_workflow.name 
-  description = var.iam_role_eventbridge_start_workflow.description
-  assume_role_policy = "${file("./policies/eventbridge_assume_role_policy.json")}"
+  name               = var.iam_role_eventbridge_start_workflow.name 
+  description        = var.iam_role_eventbridge_start_workflow.description
+  assume_role_policy = "${file(var.iam_role_eventbridge_start_workflow.assume_role_policy_file)}"
 }
 
 resource "aws_iam_policy" "eb_start_workflow" {
-  name        = var.iam_policy_eventbridge_start_workflow.name 
-  description = var.iam_policy_eventbridge_start_workflow.description
-  policy      = "${file("./policies/eventbridge_glue_policy.json")}"
+  name        = var.iam_role_eventbridge_start_workflow.policy_name
+  policy      = "${file(var.iam_role_eventbridge_start_workflow.policy_file)}"
 }
 
 resource "aws_iam_role_policy_attachment" "eb_start_workflow" {
-  role       = "${aws_iam_role.eb_start_workflow.name}"
-  policy_arn = "${aws_iam_policy.eb_start_workflow.arn}"
+  role       = aws_iam_role.eb_start_workflow.name
+  policy_arn = aws_iam_policy.eb_start_workflow.arn
 }

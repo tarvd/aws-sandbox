@@ -30,11 +30,11 @@ resource "aws_glue_catalog_database" "metadata" {
 
 resource "aws_glue_catalog_table" "openpowerlifting" {
   name          = var.glue_table_openpowerlifting_raw.name
-  database_name = aws_glue_catalog_database.raw.name
+  database_name = var.glue_table_openpowerlifting_raw.database
   table_type    = var.glue_table_openpowerlifting_raw.table_type
 
   parameters = {
-    classification = var.glue_table_openpowerlifting_raw.classification
+    classification           = var.glue_table_openpowerlifting_raw.classification
     "skip.header.line.count" = var.glue_table_openpowerlifting_raw.skip_header_line_count
   }
 
@@ -46,9 +46,8 @@ resource "aws_glue_catalog_table" "openpowerlifting" {
 
     ser_de_info {
       serialization_library = var.glue_table_openpowerlifting_raw.serialization_library
-
-      parameters = {
-        "separatorChar" = "${var.glue_table_openpowerlifting_raw.separation_char}"
+      parameters            = {
+        "separatorChar" = var.glue_table_openpowerlifting_raw.separation_char
       }
     }
 

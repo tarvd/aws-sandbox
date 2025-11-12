@@ -35,11 +35,11 @@ variable "project" {
 
 variable "athena_workgroup_primary" {
   type = object({
-    name = string
-    enforce_workgroup_configuration = bool
+    name                               = string
+    enforce_workgroup_configuration    = bool
     publish_cloudwatch_metrics_enabled = bool
-    encryption_option = string
-    acl_option = string
+    encryption_option                  = string
+    acl_option                         = string
   })
 }
 
@@ -48,9 +48,10 @@ variable "athena_workgroup_primary" {
 
 variable "eventbridge_rule_daily" {
   type = object({
-    name = string
-    description = string
+    name                = string
+    description         = string
     schedule_expression = string
+    target_id           = string
   })
 }
 
@@ -58,16 +59,10 @@ variable "eventbridge_rule_new_data_openpowerlifting" {
   type = object({
     name = string
     description = string
-    prefix = string
+    s3_bucket = string
+    s3_prefix = string
+    target_id = string
   })
-}
-
-variable "eventbridge_target_schedule_openpowerlifting_id" {
-  type = string
-}
-
-variable "eventbridge_target_new_data_openpowerlifting_id" {
-  type = string
 }
 
 
@@ -100,6 +95,7 @@ variable "glue_database_metadata" {
 variable "glue_table_openpowerlifting_raw" {
   type = object({
     name = string
+    database = string
     table_type = string
     classification = string
     skip_header_line_count = string
@@ -128,7 +124,7 @@ variable "glue_job_openpowerlifting_cleanse" {
     worker_type       = string
     execution_class   = string
     command           = string
-    script_path       = string
+    script_location   = string
     default_arguments = map(string)
   })
 }
@@ -144,6 +140,8 @@ variable "glue_workflow_openpowerlifting" {
 variable "glue_trigger_openpowerlifting_cleanse" {
   type = object({
     name = string
+    workflow = string
+    job = string
     type = string
     batch_size = number
     batch_window = number
@@ -163,50 +161,39 @@ variable "iam_user_admin_name" {
 
 variable "iam_role_glue_job" {
   type = object({
-    name = string
-    description = string
+    name                    = string
+    description             = string
+    policy_name             = string
+    policy_file             = string
+    assume_role_policy_file = string
   })
 }
 
 variable "iam_role_glue_notebook" {
   type = object({
-    name = string
-    description = string
+    name                    = string
+    description             = string
+    policy_name             = string
+    policy_file             = string
+    assume_role_policy_file = string
   })
 }
 
 variable "iam_role_lambda" {
   type = object({
-    name = string
-    description = string
+    name                    = string
+    description             = string
+    assume_role_policy_file = string
   })
 }
 
 variable "iam_role_eventbridge_start_workflow" {
   type = object({
-    name = string
-    description = string
-  })
-}
-
-variable "iam_policy_glue_job" {
-  type = object({
-    name = string
-    description = string
-  })
-}
-
-variable "iam_policy_glue_notebook" {
-  type = object({
-    name = string
-    description = string
-  })
-}
-
-variable "iam_policy_eventbridge_start_workflow" {
-  type = object({
-    name = string
-    description = string
+    name                    = string
+    description             = string
+    policy_name             = string
+    policy_file             = string
+    assume_role_policy_file = string
   })
 }
 
