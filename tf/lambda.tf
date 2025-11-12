@@ -1,17 +1,15 @@
 
 resource "aws_lambda_function" "openpowerlifting_ingest" {
-  function_name    = "dev-use2-tedsand-openpowerlifting-ingest-lambda"
+  function_name    = var.lambda_function_openpowerlifting.function_name
   role             = aws_iam_role.lambda_role.arn
   filename         = var.lambda_openpowerlifting_filename
   handler          = var.lambda_openpowerlifting_handler
   source_code_hash = filebase64sha256(var.lambda_openpowerlifting_filename)
-  runtime          = "python3.9"
-  layers = [
-    "arn:aws:lambda:us-east-2:336392948345:layer:AWSSDKPandas-Python313:1",
-  ]
-  memory_size = 3008
-  publish     = false
-  timeout     = 60
+  runtime          = var.lambda_function_openpowerlifting.runtime
+  layers           = var.lambda_function_openpowerlifting.layers
+  memory_size      = var.lambda_function_openpowerlifting.memory_size
+  publish          = var.lambda_function_openpowerlifting.publish
+  timeout          = var.lambda_function_openpowerlifting.timeout
 }
 
 resource "aws_lambda_permission" "daily_opl_ingest" {

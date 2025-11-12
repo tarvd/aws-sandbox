@@ -209,13 +209,10 @@ variable "iam_policy_eventbridge_start_workflow" {
 }
 
 
-
-
-
+# Lambda functions
 
 variable "lambda_openpowerlifting_filename" {
   type    = string
-  default = "../python/lambda/lambda_ingest_openpowerlifting.zip"
   validation {
     condition     = can(regex("\\.zip$", var.lambda_openpowerlifting_filename))
     error_message = "Filename must be a .zip file"
@@ -225,9 +222,88 @@ variable "lambda_openpowerlifting_filename" {
 
 variable "lambda_openpowerlifting_handler" {
   type    = string
-  default = "lambda_ingest_openpowerlifting.lambda_handler"
   validation {
     condition     = can(regex("\\.lambda_handler$", var.lambda_openpowerlifting_handler))
     error_message = "Function must be a lambda handler"
   }
+}
+
+variable "lambda_function_openpowerlifting" {
+  type = object({
+    function_name    = string
+    runtime          = string
+    layers           = list(string)
+    memory_size      = number
+    publish          = bool
+    timeout          = number
+  })
+}
+
+
+# S3 buckets
+
+variable "s3_bucket_athena" {
+  type = object({
+    bucket                  = string
+    block_public_acls       = bool
+    block_public_policy     = bool
+    ignore_public_acls      = bool
+    restrict_public_buckets = bool
+    bucket_versioning_status = string
+  })
+}
+
+variable "s3_bucket_raw_data" {
+  type = object({
+    bucket                  = string
+    block_public_acls       = bool
+    block_public_policy     = bool
+    ignore_public_acls      = bool
+    restrict_public_buckets = bool
+    bucket_versioning_status = string
+  })
+}
+
+variable "s3_bucket_iceberg" {
+  type = object({
+    bucket                  = string
+    block_public_acls       = bool
+    block_public_policy     = bool
+    ignore_public_acls      = bool
+    restrict_public_buckets = bool
+    bucket_versioning_status = string
+  })
+}
+
+variable "s3_bucket_python" {
+  type = object({
+    bucket                  = string
+    block_public_acls       = bool
+    block_public_policy     = bool
+    ignore_public_acls      = bool
+    restrict_public_buckets = bool
+    bucket_versioning_status = string
+  })
+}
+
+variable "s3_bucket_terraform" {
+  type = object({
+    bucket                  = string
+    block_public_acls       = bool
+    block_public_policy     = bool
+    ignore_public_acls      = bool
+    restrict_public_buckets = bool
+    bucket_versioning_status = string
+  })
+}
+
+variable "s3_bucket_logs" {
+  type = object({
+    bucket                  = string
+    block_public_acls       = bool
+    block_public_policy     = bool
+    ignore_public_acls      = bool
+    restrict_public_buckets = bool
+    bucket_versioning_status = string
+  })
 }
