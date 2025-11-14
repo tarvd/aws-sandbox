@@ -1,0 +1,178 @@
+[0m22:26:31.759805 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x0000022A8666CC20>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x0000022A853AD1D0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x0000022A870E2350>]}
+
+
+============================== 22:26:31.991805 | eea58362-36ee-4331-9406-c1d8aeddca5e ==============================
+[0m22:26:31.991805 [info ] [MainThread]: Running with dbt=1.10.15
+[0m22:26:31.995921 [debug] [MainThread]: running dbt with arguments {'no_print': 'None', 'log_format': 'default', 'printer_width': '80', 'invocation_command': 'dbt init', 'write_json': 'True', 'warn_error': 'None', 'static_parser': 'True', 'partial_parse': 'True', 'indirect_selection': 'eager', 'send_anonymous_usage_stats': 'True', 'log_path': 'logs', 'warn_error_options': 'WarnErrorOptionsV2(error=[], warn=[], silence=[])', 'fail_fast': 'False', 'use_experimental_parser': 'False', 'version_check': 'True', 'introspect': 'True', 'quiet': 'False', 'empty': 'None', 'log_cache_events': 'False', 'debug': 'False', 'profiles_dir': 'C:\\Users\\tedwa\\.dbt', 'use_colors': 'True', 'cache_selected_only': 'False', 'target_path': 'None'}
+[0m22:28:49.905908 [debug] [MainThread]: Starter project path: C:\Users\tedwa\Code\aws-sandbox\.venv\Lib\site-packages\dbt\include\starter_project
+[0m22:28:49.953709 [info ] [MainThread]: 
+Your new dbt project "dbt_athena" was created!
+
+For more information on how to configure the profiles.yml file,
+please consult the dbt documentation here:
+
+  https://docs.getdbt.com/docs/configure-your-profile
+
+One more thing:
+
+Need help? Don't hesitate to reach out to us via GitHub issues or on Slack:
+
+  https://community.getdbt.com/
+
+Happy modeling!
+
+[0m22:28:49.954623 [info ] [MainThread]: Setting up your profile.
+[0m22:29:54.865846 [info ] [MainThread]: Profile dbt_athena written to C:\Users\tedwa\.dbt\profiles.yml using target's profile_template.yml and your supplied values. Run 'dbt debug' to validate the connection.
+[0m22:29:54.872966 [debug] [MainThread]: Command `dbt init` succeeded at 22:29:54.872525 after 203.55 seconds
+[0m22:29:54.874036 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x0000022A8AAA4B00>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x0000022A888D4CB0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x0000022A88E1B240>]}
+[0m22:29:54.874941 [debug] [MainThread]: Flushing usage events
+[0m22:29:55.356084 [debug] [MainThread]: An error was encountered while trying to flush usage events
+[0m22:30:17.483304 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001DD7517A510>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001DD765A7D90>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001DD765A79D0>]}
+
+
+============================== 22:30:17.487903 | 1800ca4f-9a98-49c6-bbb7-00dec61026a0 ==============================
+[0m22:30:17.487903 [info ] [MainThread]: Running with dbt=1.10.15
+[0m22:30:17.488877 [debug] [MainThread]: running dbt with arguments {'invocation_command': 'dbt debug', 'cache_selected_only': 'False', 'log_format': 'default', 'write_json': 'True', 'profiles_dir': 'C:\\Users\\tedwa\\.dbt', 'warn_error': 'None', 'log_path': 'logs', 'partial_parse': 'True', 'static_parser': 'True', 'send_anonymous_usage_stats': 'True', 'fail_fast': 'False', 'warn_error_options': 'WarnErrorOptionsV2(error=[], warn=[], silence=[])', 'indirect_selection': 'eager', 'use_experimental_parser': 'False', 'version_check': 'True', 'quiet': 'False', 'introspect': 'True', 'empty': 'None', 'log_cache_events': 'False', 'debug': 'False', 'no_print': 'None', 'use_colors': 'True', 'printer_width': '80', 'target_path': 'None'}
+[0m22:30:17.545354 [info ] [MainThread]: dbt version: 1.10.15
+[0m22:30:17.545983 [info ] [MainThread]: python version: 3.13.0
+[0m22:30:17.546402 [info ] [MainThread]: python path: C:\Users\tedwa\Code\aws-sandbox\.venv\Scripts\python.exe
+[0m22:30:17.546908 [info ] [MainThread]: os info: Windows-11-10.0.26100-SP0
+[0m22:30:18.072776 [info ] [MainThread]: Using profiles dir at C:\Users\tedwa\.dbt
+[0m22:30:18.073643 [info ] [MainThread]: Using profiles.yml file at C:\Users\tedwa\.dbt\profiles.yml
+[0m22:30:18.074249 [info ] [MainThread]: Using dbt_project.yml file at C:\Users\tedwa\Code\aws-sandbox\dbt_project.yml
+[0m22:30:18.076128 [error] [MainThread]: Encountered an error:
+Internal Error
+  Profile should not be None if loading profile completed
+[0m22:30:18.077256 [debug] [MainThread]: Command `dbt debug` failed at 22:30:18.077131 after 0.81 seconds
+[0m22:30:18.077576 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001DD78776520>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001DD78771FD0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001DD78264AF0>]}
+[0m22:30:18.077922 [debug] [MainThread]: Flushing usage events
+[0m22:30:18.505231 [debug] [MainThread]: An error was encountered while trying to flush usage events
+[0m22:32:00.152806 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001E0C9A8A510>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001E0CAEB7D90>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001E0CAEB79D0>]}
+
+
+============================== 22:32:00.157365 | cce5dbb0-d4dd-4b81-8877-de5a65612e46 ==============================
+[0m22:32:00.157365 [info ] [MainThread]: Running with dbt=1.10.15
+[0m22:32:00.158264 [debug] [MainThread]: running dbt with arguments {'profiles_dir': 'C:\\Users\\tedwa\\.dbt', 'use_colors': 'True', 'cache_selected_only': 'False', 'no_print': 'None', 'write_json': 'True', 'warn_error': 'None', 'static_parser': 'True', 'fail_fast': 'False', 'partial_parse': 'True', 'send_anonymous_usage_stats': 'True', 'indirect_selection': 'eager', 'warn_error_options': 'WarnErrorOptionsV2(error=[], warn=[], silence=[])', 'log_path': 'logs', 'use_experimental_parser': 'False', 'version_check': 'True', 'introspect': 'True', 'quiet': 'False', 'empty': 'None', 'log_cache_events': 'False', 'debug': 'False', 'log_format': 'default', 'invocation_command': 'dbt debug', 'printer_width': '80', 'target_path': 'None'}
+[0m22:32:00.184702 [info ] [MainThread]: dbt version: 1.10.15
+[0m22:32:00.185363 [info ] [MainThread]: python version: 3.13.0
+[0m22:32:00.185954 [info ] [MainThread]: python path: C:\Users\tedwa\Code\aws-sandbox\.venv\Scripts\python.exe
+[0m22:32:00.186490 [info ] [MainThread]: os info: Windows-11-10.0.26100-SP0
+[0m22:32:00.743157 [info ] [MainThread]: Using profiles dir at C:\Users\tedwa\.dbt
+[0m22:32:00.743972 [info ] [MainThread]: Using profiles.yml file at C:\Users\tedwa\.dbt\profiles.yml
+[0m22:32:00.744647 [info ] [MainThread]: Using dbt_project.yml file at C:\Users\tedwa\Code\aws-sandbox\dbt_project.yml
+[0m22:32:00.766671 [info ] [MainThread]: adapter type: athena
+[0m22:32:00.768456 [info ] [MainThread]: adapter version: 1.9.5
+[0m22:32:00.770511 [info ] [MainThread]: Configuration:
+[0m22:32:00.772078 [info ] [MainThread]:   profiles.yml file [[32mOK found and valid[0m]
+[0m22:32:00.773543 [info ] [MainThread]:   dbt_project.yml file [[31mERROR not found[0m]
+[0m22:32:00.774058 [info ] [MainThread]: Required dependencies:
+[0m22:32:00.776596 [debug] [MainThread]: Executing "git --help"
+[0m22:32:00.826879 [debug] [MainThread]: STDOUT: "b"usage: git [-v | --version] [-h | --help] [-C <path>] [-c <name>=<value>]\n           [--exec-path[=<path>]] [--html-path] [--man-path] [--info-path]\n           [-p | --paginate | -P | --no-pager] [--no-replace-objects] [--no-lazy-fetch]\n           [--no-optional-locks] [--no-advice] [--bare] [--git-dir=<path>]\n           [--work-tree=<path>] [--namespace=<name>] [--config-env=<name>=<envvar>]\n           <command> [<args>]\n\nThese are common Git commands used in various situations:\n\nstart a working area (see also: git help tutorial)\n   clone      Clone a repository into a new directory\n   init       Create an empty Git repository or reinitialize an existing one\n\nwork on the current change (see also: git help everyday)\n   add        Add file contents to the index\n   mv         Move or rename a file, a directory, or a symlink\n   restore    Restore working tree files\n   rm         Remove files from the working tree and from the index\n\nexamine the history and state (see also: git help revisions)\n   bisect     Use binary search to find the commit that introduced a bug\n   diff       Show changes between commits, commit and working tree, etc\n   grep       Print lines matching a pattern\n   log        Show commit logs\n   show       Show various types of objects\n   status     Show the working tree status\n\ngrow, mark and tweak your common history\n   backfill   Download missing objects in a partial clone\n   branch     List, create, or delete branches\n   commit     Record changes to the repository\n   merge      Join two or more development histories together\n   rebase     Reapply commits on top of another base tip\n   reset      Reset current HEAD to the specified state\n   switch     Switch branches\n   tag        Create, list, delete or verify a tag object signed with GPG\n\ncollaborate (see also: git help workflows)\n   fetch      Download objects and refs from another repository\n   pull       Fetch from and integrate with another repository or a local branch\n   push       Update remote refs along with associated objects\n\n'git help -a' and 'git help -g' list available subcommands and some\nconcept guides. See 'git help <command>' or 'git help <concept>'\nto read about a specific subcommand or concept.\nSee 'git help git' for an overview of the system.\n""
+[0m22:32:00.827442 [debug] [MainThread]: STDERR: "b''"
+[0m22:32:00.827893 [info ] [MainThread]:  - git [[32mOK found[0m]
+
+[0m22:32:00.828413 [info ] [MainThread]: Connection:
+[0m22:32:00.828999 [info ] [MainThread]:   s3_staging_dir: s3://dev-use2-tedsand-athena-results-s3/dbt/staging/
+[0m22:32:00.829510 [info ] [MainThread]:   work_group: dbt
+[0m22:32:00.829957 [info ] [MainThread]:   skip_workgroup_check: True
+[0m22:32:00.830434 [info ] [MainThread]:   region_name: us-east-2
+[0m22:32:00.830883 [info ] [MainThread]:   database: awsdatacatalog
+[0m22:32:00.831392 [info ] [MainThread]:   schema: dbt
+[0m22:32:00.831825 [info ] [MainThread]:   poll_interval: 5.0
+[0m22:32:00.832254 [info ] [MainThread]:   aws_profile_name: None
+[0m22:32:00.832730 [info ] [MainThread]:   aws_access_key_id: None
+[0m22:32:00.833286 [info ] [MainThread]:   endpoint_url: None
+[0m22:32:00.833946 [info ] [MainThread]:   s3_data_dir: s3://dev-use2-tedsand-athena-results-s3/dbt/data/
+[0m22:32:00.836722 [info ] [MainThread]:   s3_data_naming: schema_table
+[0m22:32:00.837165 [info ] [MainThread]:   s3_tmp_table_dir: s3://dev-use2-tedsand-athena-results-s3/dbt/temp/
+[0m22:32:00.837720 [info ] [MainThread]:   debug_query_state: False
+[0m22:32:00.839070 [info ] [MainThread]:   seed_s3_upload_args: None
+[0m22:32:00.840140 [info ] [MainThread]:   lf_tags_database: None
+[0m22:32:00.840773 [info ] [MainThread]:   spark_work_group: None
+[0m22:32:00.841838 [info ] [MainThread]: Registered adapter: athena=1.9.5
+[0m22:32:01.138640 [debug] [MainThread]: Acquiring new athena connection 'debug'
+[0m22:32:01.139057 [debug] [MainThread]: Using athena connection "debug"
+[0m22:32:01.139322 [debug] [MainThread]: On debug: select 1 as id
+[0m22:32:01.139548 [debug] [MainThread]: Opening a new connection, currently in state init
+[0m22:32:02.072652 [debug] [MainThread]: dbt.adapters.athena.constants adapter: Athena query ID 35564437-e57e-4d8a-9cc9-9af4359ababb
+[0m22:32:07.527879 [debug] [MainThread]: SQL status: OK -1 in 6.388 seconds
+[0m22:32:07.529823 [debug] [MainThread]: On debug: Close
+[0m22:32:07.530386 [info ] [MainThread]:   Connection test: [[32mOK connection ok[0m]
+
+[0m22:32:07.532375 [info ] [MainThread]: [31m1 check failed:[0m
+[0m22:32:07.533221 [info ] [MainThread]: Project loading failed for the following reason:
+ project path <C:\Users\tedwa\Code\aws-sandbox\dbt_project.yml> not found
+
+[0m22:32:07.534805 [debug] [MainThread]: Command `dbt debug` failed at 22:32:07.534615 after 7.64 seconds
+[0m22:32:07.535248 [debug] [MainThread]: Connection 'debug' was properly closed.
+[0m22:32:07.535730 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001E0CEEAFA80>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001E0CEF297F0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001E0CCAD07C0>]}
+[0m22:32:07.536221 [debug] [MainThread]: Flushing usage events
+[0m22:32:07.928886 [debug] [MainThread]: An error was encountered while trying to flush usage events
+[0m22:56:16.108181 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x00000243B2E5A510>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x00000243B4297D90>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x00000243B42979D0>]}
+
+
+============================== 22:56:16.112452 | 1c2cdff9-cd78-49c1-936a-dac3d5960b2a ==============================
+[0m22:56:16.112452 [info ] [MainThread]: Running with dbt=1.10.15
+[0m22:56:16.113229 [debug] [MainThread]: running dbt with arguments {'target_path': 'None', 'profiles_dir': 'C:\\Users\\tedwa\\.dbt', 'log_format': 'default', 'cache_selected_only': 'False', 'invocation_command': 'dbt init', 'warn_error': 'None', 'static_parser': 'True', 'partial_parse': 'True', 'log_path': 'logs', 'send_anonymous_usage_stats': 'True', 'indirect_selection': 'eager', 'warn_error_options': 'WarnErrorOptionsV2(error=[], warn=[], silence=[])', 'fail_fast': 'False', 'version_check': 'True', 'use_experimental_parser': 'False', 'introspect': 'True', 'quiet': 'False', 'empty': 'None', 'log_cache_events': 'False', 'debug': 'False', 'no_print': 'None', 'use_colors': 'True', 'printer_width': '80', 'write_json': 'True'}
+[0m22:57:00.361909 [debug] [MainThread]: Starter project path: C:\Users\tedwa\Code\aws-sandbox\.venv\Lib\site-packages\dbt\include\starter_project
+[0m22:57:00.393066 [info ] [MainThread]: 
+Your new dbt project "dbt_tedsand" was created!
+
+For more information on how to configure the profiles.yml file,
+please consult the dbt documentation here:
+
+  https://docs.getdbt.com/docs/configure-your-profile
+
+One more thing:
+
+Need help? Don't hesitate to reach out to us via GitHub issues or on Slack:
+
+  https://community.getdbt.com/
+
+Happy modeling!
+
+[0m22:57:00.394063 [info ] [MainThread]: Setting up your profile.
+[0m22:57:07.384012 [debug] [MainThread]: Command `dbt init` succeeded at 22:57:07.383323 after 51.49 seconds
+[0m22:57:07.385315 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x00000243B42B6D70>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x00000243B53B8050>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x00000243B40C7F00>]}
+[0m22:57:07.386491 [debug] [MainThread]: Flushing usage events
+[0m22:57:08.017382 [debug] [MainThread]: An error was encountered while trying to flush usage events
+[0m22:57:18.559624 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001E94179A510>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001E942BDBD90>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001E942BDB9D0>]}
+
+
+============================== 22:57:18.566115 | 941befd4-29b0-44a6-853d-b02247b7743e ==============================
+[0m22:57:18.566115 [info ] [MainThread]: Running with dbt=1.10.15
+[0m22:57:18.566880 [debug] [MainThread]: running dbt with arguments {'use_colors': 'True', 'no_print': 'None', 'profiles_dir': 'C:\\Users\\tedwa\\.dbt', 'printer_width': '80', 'write_json': 'True', 'warn_error': 'None', 'log_path': 'logs', 'fail_fast': 'False', 'indirect_selection': 'eager', 'send_anonymous_usage_stats': 'True', 'static_parser': 'True', 'warn_error_options': 'WarnErrorOptionsV2(error=[], warn=[], silence=[])', 'partial_parse': 'True', 'version_check': 'True', 'use_experimental_parser': 'False', 'quiet': 'False', 'introspect': 'True', 'empty': 'None', 'log_cache_events': 'False', 'debug': 'False', 'log_format': 'default', 'invocation_command': 'dbt init', 'cache_selected_only': 'False', 'target_path': 'None'}
+[0m22:57:22.082044 [info ] [MainThread]: A project called dbt_tedsand already exists here.
+[0m22:57:22.084272 [debug] [MainThread]: Command `dbt init` succeeded at 22:57:22.084011 after 3.68 seconds
+[0m22:57:22.084921 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001E942BFAD70>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001E942C7BE30>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001E942A07F00>]}
+[0m22:57:22.085560 [debug] [MainThread]: Flushing usage events
+[0m22:57:22.657705 [debug] [MainThread]: An error was encountered while trying to flush usage events
+[0m22:57:36.534004 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001E885DFA510>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001E88723BD90>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001E88723B9D0>]}
+
+
+============================== 22:57:36.538352 | 9eb5aa50-241e-4cdd-8bd3-80d11c63ab32 ==============================
+[0m22:57:36.538352 [info ] [MainThread]: Running with dbt=1.10.15
+[0m22:57:36.539147 [debug] [MainThread]: running dbt with arguments {'profiles_dir': 'C:\\Users\\tedwa\\.dbt', 'log_format': 'default', 'target_path': 'None', 'use_colors': 'True', 'cache_selected_only': 'False', 'warn_error': 'None', 'indirect_selection': 'eager', 'fail_fast': 'False', 'log_path': 'logs', 'send_anonymous_usage_stats': 'True', 'static_parser': 'True', 'warn_error_options': 'WarnErrorOptionsV2(error=[], warn=[], silence=[])', 'partial_parse': 'True', 'version_check': 'True', 'use_experimental_parser': 'False', 'quiet': 'False', 'introspect': 'True', 'empty': 'None', 'log_cache_events': 'False', 'debug': 'False', 'no_print': 'None', 'invocation_command': 'dbt init', 'printer_width': '80', 'write_json': 'True'}
+[0m22:57:39.846788 [debug] [MainThread]: Starter project path: C:\Users\tedwa\Code\aws-sandbox\.venv\Lib\site-packages\dbt\include\starter_project
+[0m22:57:39.864330 [info ] [MainThread]: 
+Your new dbt project "dbt_tedsand" was created!
+
+For more information on how to configure the profiles.yml file,
+please consult the dbt documentation here:
+
+  https://docs.getdbt.com/docs/configure-your-profile
+
+One more thing:
+
+Need help? Don't hesitate to reach out to us via GitHub issues or on Slack:
+
+  https://community.getdbt.com/
+
+Happy modeling!
+
+[0m22:57:39.865573 [info ] [MainThread]: Setting up your profile.
+[0m22:58:26.983422 [info ] [MainThread]: Profile dbt_tedsand written to C:\Users\tedwa\.dbt\profiles.yml using target's profile_template.yml and your supplied values. Run 'dbt debug' to validate the connection.
+[0m22:58:26.988975 [debug] [MainThread]: Command `dbt init` succeeded at 22:58:26.988648 after 50.57 seconds
+[0m22:58:26.992240 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001E889378E90>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001E887388290>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001E8872BF570>]}
+[0m22:58:26.993704 [debug] [MainThread]: Flushing usage events
+[0m22:58:27.835776 [debug] [MainThread]: An error was encountered while trying to flush usage events

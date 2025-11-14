@@ -59,3 +59,8 @@ terraform.rc
 # VS Code settings
 .vscode/
 .vscode/*
+
+# dbt
+dbt_athena/target/
+dbt_athena/dbt_packages/
+dbt_athena/logs/

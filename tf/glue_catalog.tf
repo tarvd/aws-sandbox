@@ -28,6 +28,16 @@ resource "aws_glue_catalog_database" "metadata" {
   }
 }
 
+resource "aws_glue_catalog_database" "dbt" {
+  name = var.glue_database_dbt.name
+  create_table_default_permission {
+    permissions = var.glue_database_dbt.default_permissions
+    principal {
+      data_lake_principal_identifier = var.glue_database_dbt.lf_principal
+    }
+  }
+}
+
 resource "aws_glue_catalog_table" "openpowerlifting" {
   name          = var.glue_table_openpowerlifting_raw.name
   database_name = var.glue_table_openpowerlifting_raw.database

@@ -1,0 +1,15 @@
+
+version: 2
+
+sources:
+  - name: cleansed
+    database: awsdatacatalog
+    description: Cleansed data in partitioned tables
+    tables:
+      - name: openpowerlifting
+        description: Meet results data from Openpowerlifting.org
+        config:
+          freshness:
+            warn_after: {count: 8, period: day}
+            error_after: {count: 15, period: day}
+          loaded_at_field: ingested_at

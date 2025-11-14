@@ -1,8 +1,0 @@
-version: 2
-
-sources:
-  - name: openpowerlifting
-    description: "OpenPowerlifting.org"
-    tables:
-      - name: lifter
-        description: "Lifter results per meet"

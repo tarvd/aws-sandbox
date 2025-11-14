@@ -46,6 +46,16 @@ variable "athena_workgroup_primary" {
   })
 }
 
+variable "athena_workgroup_dbt" {
+  type = object({
+    name                               = string
+    enforce_workgroup_configuration    = bool
+    publish_cloudwatch_metrics_enabled = bool
+    encryption_option                  = string
+    acl_option                         = string
+  })
+}
+
 
 # Eventbridge rules and targets
 
@@ -89,6 +99,14 @@ variable "glue_database_cleansed" {
 }
 
 variable "glue_database_metadata" {
+  type = object({
+    name = string
+    default_permissions = list(string)
+    lf_principal = string
+  })
+}
+
+variable "glue_database_dbt" {
   type = object({
     name = string
     default_permissions = list(string)
