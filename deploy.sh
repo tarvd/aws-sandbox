@@ -1,0 +1,1 @@
+aws s3 sync .\python s3://dev-use2-tedsand-python-s3/
