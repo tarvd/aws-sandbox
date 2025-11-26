@@ -47,7 +47,8 @@ CREATE TABLE cleansed.openpowerlifting (
   inserted_at timestamp,
   job_name string,
   job_id string,
-  job_run_id string
+  job_run_id string,
+  is_deleted boolean
  ) 
 PARTITIONED BY (bucket(16, row_hash)) 
 LOCATION 's3://dev-use2-tedsand-iceberg-s3/warehouse/cleansed.db/openpowerlifting' 

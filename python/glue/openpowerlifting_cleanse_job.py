@@ -210,6 +210,15 @@ def main():
 
             total_rows_processed += filtered_num_rows
 
+            # Mark records not in latest file as deleted
+            if filename == source_file_list[-1]:
+                df.createOrReplaceTempView("latest_data")
+                spark.sql("""
+                    UPDATE glue_catalog.{TARGET_DB}.{TARGET_TABLE}
+                    SET is_deleted = true
+                    WHERE row_hash NOT IN (SELECT row_hash FROM latest_data)
+                """)
+
         logger.info(f"Job {job_name} completed successfully")
 
         sns.publish(
