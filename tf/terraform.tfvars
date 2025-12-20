@@ -195,7 +195,7 @@ lambda_openpowerlifting_handler = "lambda_ingest_openpowerlifting.lambda_handler
 
 lambda_function_openpowerlifting = {
   function_name   = "dev-use2-tedsand-openpowerlifting-ingest-lambda"
-  runtime         = "python3.9"
+  runtime         = "python3.13"
   layers          = ["arn:aws:lambda:us-east-2:336392948345:layer:AWSSDKPandas-Python313:1",]
   memory_size     = 3008
   publish         = false
@@ -266,6 +266,6 @@ s3_bucket_logs = {
 
 sns_topic_lambda_results = {
   name         = "dev-use2-tedsand-lambda-results-sns"
-  display_name = "LambdaSNS"
+  display_name = "AWS Sandbox SNS"
   policy_file  = "./policies/sns_topic_policy.json"
 }

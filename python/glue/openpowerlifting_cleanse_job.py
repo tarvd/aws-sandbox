@@ -1,4 +1,3 @@
-
 import sys
 import logging
 import boto3
@@ -28,6 +27,7 @@ SOURCE_SYSTEM = "Openpowerlifting.org"
 TARGET_DB = "cleansed"
 TARGET_TABLE = "openpowerlifting"
 CONTEXT = "RawToIcebergCleanseJob"
+
 PROCESSED_DATA_COLS = [
     "file_key",
     "job_name",
@@ -36,6 +36,7 @@ PROCESSED_DATA_COLS = [
     "job_id",
     "job_run_id",
 ]
+
 RENAME_COLS_MAP = {
     "Name": "name",
     "Sex": "sex",
@@ -129,12 +130,14 @@ def main():
                 f"s3://{source_bucket}/{path}"
                 for path in source_objects
                 if f"s3://{source_bucket}/{path}" not in skip_files_list
-                and path[-4:] == '.csv'
+                and path[-4:] == ".csv"
             ]
         )
 
         if len(source_file_list) == 0:
             logger.info("No new data to process, ending job.")
+            job_status = "NO NEW DATA"
+            sns_message = "No new data to process."
             return
 
         logger.info(f"Files to process: {source_file_list}")
@@ -194,6 +197,7 @@ def main():
             df = df.withColumn("job_name", lit(job_name))
             df = df.withColumn("job_id", lit(job_id))
             df = df.withColumn("job_run_id", lit(job_run_id))
+            df = df.withColumn("is_deleted", lit(False))
 
             logger.info("Renaming columns from camel to snake case")
             df = df.withColumnsRenamed(RENAME_COLS_MAP)
@@ -203,6 +207,15 @@ def main():
                 "format-version", "2"
             ).append()
 
+            # Mark records not in latest file as deleted
+            if filename == source_file_list[-1]:
+                df.createOrReplaceTempView("latest_data")
+                spark.sql(f"""
+                    UPDATE glue_catalog.{TARGET_DB}.{TARGET_TABLE}
+                    SET is_deleted = true
+                    WHERE row_hash NOT IN (SELECT row_hash FROM latest_data)
+                """)
+
             logger.info(f"Adding row to metadata.processed_data_log for {filename}")
             processed_data_df.writeTo(
                 "glue_catalog.metadata.processed_data_log"
@@ -210,34 +223,28 @@ def main():
 
             total_rows_processed += filtered_num_rows
 
-            # Mark records not in latest file as deleted
-            if filename == source_file_list[-1]:
-                df.createOrReplaceTempView("latest_data")
-                spark.sql("""
-                    UPDATE glue_catalog.{TARGET_DB}.{TARGET_TABLE}
-                    SET is_deleted = true
-                    WHERE row_hash NOT IN (SELECT row_hash FROM latest_data)
-                """)
-
         logger.info(f"Job {job_name} completed successfully")
-
-        sns.publish(
-            TopicArn = sns_topic_arn,
-            Subject = f"Glue Job Success - {job_name}",
-            Message = f"{job_name}\n\nFunction succeeded, {total_rows_processed} rows added to {TARGET_DB}.{TARGET_TABLE}"
+        job_status = "SUCCEEDED"
+        sns_message = (
+            f"\n\n{total_rows_processed} rows added to {TARGET_DB}.{TARGET_TABLE}"
         )
 
     except Exception as e:
         logger.error(f"Error: {e}")
 
+        job_status = "FAILED"
+        sns_message = f"\n\nJob failed:\n\n{error_message}"
         error_message = traceback.format_exc()
-        sns.publish(
-            TopicArn = sns_topic_arn,
-            Subject = f"Glue Job Failure Alert - {job_name}",
-            Message = f"{job_name}\n\nFunction failed:\n\n{error_message}"
-        )
 
         raise e
+
+    finally:
+        logger.info("Sending SNS notification")
+        sns.publish(
+            TopicArn=sns_topic_arn,
+            Subject=f"Glue Job {job_name}: {job_status}",
+            Message=sns_message,
+        )
 
 
 if __name__ == "__main__":
