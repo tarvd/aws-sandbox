@@ -82,6 +82,9 @@ RENAME_COLS_MAP = {
     "Sanctioned": "sanctioned",
 }
 
+glue = boto3.client("glue")
+s3 = boto3.client("s3")
+sns = boto3.client("sns")
 
 def main():
     try:
@@ -90,10 +93,6 @@ def main():
         sc = SparkContext.getOrCreate()
         glueContext = GlueContext(sc)
         spark = glueContext.spark_session
-        glue = boto3.client("glue")
-        s3 = boto3.client("s3")
-        sns = boto3.client("sns")
-
         args = getResolvedOptions(sys.argv, ["JOB_NAME", "sns_topic_arn"])
         job_name = args["JOB_NAME"]
         job_id = args["JOB_ID"]
@@ -135,9 +134,8 @@ def main():
         )
 
         if len(source_file_list) == 0:
-            logger.info("No new data to process, ending job.")
             job_status = "NO NEW DATA"
-            sns_message = "No new data to process."
+            message = "No new data to process."
             return
 
         logger.info(f"Files to process: {source_file_list}")
@@ -223,27 +221,26 @@ def main():
 
             total_rows_processed += filtered_num_rows
 
-        logger.info(f"Job {job_name} completed successfully")
-        job_status = "SUCCEEDED"
-        sns_message = (
+        job_status = "SUCCESS"
+        message = (
             f"\n\n{total_rows_processed} rows added to {TARGET_DB}.{TARGET_TABLE}"
         )
+        return
 
     except Exception as e:
         logger.error(f"Error: {e}")
 
-        job_status = "FAILED"
-        sns_message = f"\n\nJob failed:\n\n{error_message}"
-        error_message = traceback.format_exc()
-
+        job_status = "FAILURE"
+        message = f"\n\nJob failed:\n\n{traceback.format_exc()}"
         raise e
 
     finally:
+        logger.info(message)
         logger.info("Sending SNS notification")
         sns.publish(
             TopicArn=sns_topic_arn,
             Subject=f"Glue Job {job_name}: {job_status}",
-            Message=sns_message,
+            Message=message,
         )
 
 

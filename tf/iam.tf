@@ -70,6 +70,15 @@ resource "aws_iam_role_policy_attachment" "lambda-role-s3-policy-attach" {
   policy_arn = data.aws_iam_policy.AmazonS3FullAccess.arn
 }
 
+data "aws_iam_policy" "AmazonAthenaFullAccess" {
+  arn = "arn:aws:iam::aws:policy/AmazonAthenaFullAccess"
+}
+
+resource "aws_iam_role_policy_attachment" "lambda-role-athena-policy-attach" {
+  role       = aws_iam_role.lambda_role.name
+  policy_arn = data.aws_iam_policy.AmazonAthenaFullAccess.arn
+}
+
 data "aws_iam_policy" "AWSLambdaBasicExecutionRole" {
   arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }

@@ -19,8 +19,8 @@ resource "aws_lambda_function" "openpowerlifting_ingest" {
     variables = {
       URL = var.lambda_function_openpowerlifting.url
       BUCKET = aws_s3_bucket.raw_data.bucket
-      PREFIX = var.lambda_function_openpowerlifting.s3_prefix
       SNS_TOPIC_ARN = aws_sns_topic.lambda_results.arn
+      S3_OUTPUT_LOCATION = aws_athena_workgroup.primary.configuration[0].result_configuration[0].output_location
       LAMBDA = var.lambda_function_openpowerlifting.function_name
     }
   }

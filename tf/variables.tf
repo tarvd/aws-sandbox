@@ -259,7 +259,6 @@ variable "lambda_function_openpowerlifting" {
     publish          = bool
     timeout          = number
     url              = string
-    s3_prefix        = string
   })
 }
 

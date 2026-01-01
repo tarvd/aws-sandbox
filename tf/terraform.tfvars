@@ -201,7 +201,6 @@ lambda_function_openpowerlifting = {
   publish         = false
   timeout         = 60
   url             = "https://openpowerlifting.gitlab.io/opl-csv/files/openpowerlifting-latest.zip"
-  s3_prefix       = "openpowerlifting"
 }
 
 

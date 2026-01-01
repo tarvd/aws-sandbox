@@ -2,35 +2,36 @@ from hashlib import md5
 from io import BytesIO
 from zipfile import ZipFile
 import time
+import json
+from datetime import datetime, timezone
 
 import boto3
 import requests
 
 
 def get_file_from_url(url: str) -> BytesIO:
-    response = requests.get(url)
+    response = requests.get(url, stream=True, timeout=300)
     response.raise_for_status()
-    return BytesIO(response.content)
+
+    buffer = BytesIO(response.content)
+    buffer.seek(0)
+    return buffer
 
 
-def get_file_md5_hash(file, chunk_size: int = 1024) -> str:
-    m = md5()
-    with open(file, 'rb') as f:
-        data = f.read(chunk_size)
-        m.update(data)
+def get_md5_from_buffer(buffer: BytesIO) -> str:
+    buffer.seek(0)
+    return md5(buffer.read()).hexdigest()
 
-    return m.hexdigest()
-    
 
 def run_athena_query(
     query: str,
     athena_client,
     database: str,
     output_location: str,
-    poll_interval: float = 3.0,
-    page_size: int = 1000
+    return_result: bool = True,
+    poll_interval: float = 1.0,
+    page_size: int = 1000,
 ) -> dict:
-    
     # Initiate query
     start_args = {
         "QueryString": query,
@@ -54,113 +55,130 @@ def run_athena_query(
             reason = status_response["QueryExecution"]["Status"].get(
                 "StateChangeReason", "Unknown error"
             )
-            raise RuntimeError(
-                f"Athena query {status.lower()}: {reason}"
-            )
+            raise RuntimeError(f"Athena query {status.lower()}: {reason}")
 
         time.sleep(poll_interval)
 
     # Paginate results
-    all_rows = []
-    column_info = None
-    next_token = None
-    is_first_page = True
+    if return_result:
+        all_rows = []
+        column_info = None
+        next_token = None
+        is_first_page = True
 
-    page_args = {
-        "QueryExecutionId": execution_id,
-        "MaxResults": page_size,
-    }
+        page_args = {
+            "QueryExecutionId": execution_id,
+            "MaxResults": page_size,
+        }
 
-    while True:
-        response = athena_client.get_query_results(**page_args)
+        while True:
+            response = athena_client.get_query_results(**page_args)
 
-        if is_first_page:
-            column_info = (
-                response["ResultSet"]["ResultSetMetadata"]["ColumnInfo"]
-            )
-            all_rows.extend([x["Data"] for x in response["ResultSet"]["Rows"][1:]])
-            is_first_page = False
-        else:
-            all_rows.extend([x["Data"] for x in response["ResultSet"]["Rows"][1:]])
+            if is_first_page:
+                column_info = response["ResultSet"]["ResultSetMetadata"]["ColumnInfo"]
+                all_rows.extend([x["Data"] for x in response["ResultSet"]["Rows"][1:]])
+                is_first_page = False
+            else:
+                all_rows.extend([x["Data"] for x in response["ResultSet"]["Rows"][1:]])
 
-        next_token = response.get("NextToken")
-        if not next_token:
-            break
-        else:
-            page_args["NextToken"] = next_token
+            next_token = response.get("NextToken")
+            if not next_token:
+                break
+            else:
+                page_args["NextToken"] = next_token
 
-    return {
-        "ColumnInfo": column_info,
-        "Rows": all_rows,
-    }
+        return {
+            "ColumnInfo": column_info,
+            "Rows": all_rows,
+        }
 
 
-def compare_ingestion_hash(hash: str, athena_client, **kwargs) -> bool:
-    log_table = kwargs.get("log_table", "metadata.data_ingest_log")
-    hash_column = kwargs.get("hash_column", "file_md5_hash")
-    database = kwargs.get("database", "metadata")
-    s3_output_location = kwargs.get("s3_output_location", "s3://dev-use2-tedsand-athena-results-s3/primary/")
-    poll_interval = kwargs.get("poll_interval", 3.0)
-    page_size = kwargs.get("page_size", 1000)
-
+def compare_ingestion_hash(
+    hash: str,
+    athena_client,
+    s3_output_location: str,
+    log_table: str = "metadata.data_ingest_log",
+    hash_column: str = "file_md5_hash",
+    database: str = "metadata",
+) -> bool:
     hash_exists = False
     query = f"select count(*) > 0 as hash_exists from {log_table} where {hash_column} = '{hash}'"
-    query_results = run_athena_query(query, athena_client, database, s3_output_location, poll_interval, page_size)["Rows"][0][0]["VarCharValue"]
-    if query_results != 'false':
+    query_results = run_athena_query(
+        query, athena_client, database, s3_output_location
+    )["Rows"][0][0]["VarCharValue"]
+    if query_results != "false":
         hash_exists = True
 
     return hash_exists
 
-    
-def inspect_opl_zip(zip_file) -> tuple[str, str]:
-    
+
+def process_opl_zip(zip_file: BytesIO, bucket: str, s3_client) -> str:
     with ZipFile(zip_file) as z:
         csv_files = [name for name in z.namelist() if name.endswith(".csv")]
-    
+
     if not csv_files:
         raise ValueError("No CSV files found in the ZIP archive.")
     csv_path = csv_files[0]
 
     csv_fn = csv_path.split("/")[-1]
-    csv_fn_split = csv_fn.split("-")
-    if len(csv_fn_split) >= 4:
-        year_val, month_val, day_val = csv_fn.split("-")[1:4]
-        if (
-            len(year_val) == 4
-            and len(month_val) == 2
-            and len(day_val) == 2
-            and year_val.isdigit()
-            and month_val.isdigit()
-            and day_val.isdigit()
-            and year_val >= "2000"
-            and year_val <= "3000"
-            and month_val >= "01"
-            and month_val <= "12"
-            and day_val >= "01"
-            and day_val <= "31"
-        ):
-            prefix = f"openpowerlifting/year={year_val}/month={month_val}/day={day_val}/"
-    else:
-        prefix = "openpowerlifting/year=__HIVE_DEFAULT_PARTITION__/month=__HIVE_DEFAULT_PARTITION__/day=__HIVE_DEFAULT_PARTITION__/"
+    current_time = datetime.now()
+    prefix = f"openpowerlifting/year={current_time.strftime('%Y')}/month={current_time.strftime('%m')}/day={current_time.strftime('%d')}/"
     key = prefix + csv_fn
 
-    return csv_path, key
-    
-
-def upload_csv_in_zip_to_s3(zip_file, s3_client, csv_path: str, bucket: str, key: str) -> dict:
-    
     with ZipFile(zip_file) as z:
-        with z.open(csv_path, "rb") as csv_file:
+        with z.open(csv_path, "r") as csv_file:
             s3_client.upload_fileobj(csv_file, bucket, key)
 
+    return f"s3://{bucket}/{key}"
 
+
+def insert_row_data_ingest_log(
+    payload: dict,
+    athena_client,
+    output_location: str,
+    database: str = "metadata",
+    log_table: str = "metadata.data_ingest_log",
+) -> None:
+    insert_sql = f"""
+        insert into {log_table} (event_id, ingest_ts, event_type, source_system, file_md5_hash, payload)
+        select 
+            coalesce(max(event_id)+1,0) as event_id,
+            cast('{payload["ingest_ts"]}' as timestamp) as ingest_ts,
+            '{payload["event_type"]}' as event_type,
+            '{payload["source_system"]}' as source_system,
+            '{payload["file_md5_hash"]}' as file_md5_hash,
+            '{json.dumps(payload)}' as payload
+        from {log_table};
+    """
+    run_athena_query(insert_sql, athena_client, database, output_location, False)
+
+
+url = "https://openpowerlifting.gitlab.io/opl-csv/files/openpowerlifting-latest.zip"
+s3_output_location = "s3://dev-use2-tedsand-athena-results-s3/primary/"
+bucket = "dev-use2-tedsand-raw-data-s3"
 
 athena = boto3.client("athena")
 s3 = boto3.client("s3")
 
-# query = "select * from metadata.processed_data_log limit 5"
-# result = run_athena_query(query, athena, "metadata", "s3://dev-use2-tedsand-athena-results-s3/primary/")
-# print(result["Rows"][0][0]["VarCharValue"])
-
-# result = compare_ingestion_hash("asdf", athena, s3_output_location="s3://dev-use2-tedsand-athena-results-s3/primary/")
-# print(result)
+zip_file = get_file_from_url(url)
+hash = get_md5_from_buffer(zip_file)
+print(hash)
+hash_exists = compare_ingestion_hash(hash, athena, s3_output_location)
+hash_exists = False
+if hash_exists:
+    print("data already ingested! I'm going back to bed.")
+else:
+    print("processing this new data")
+    s3_location = process_opl_zip(zip_file, bucket, s3)
+    payload = {
+        "ingest_ts": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S.%f"),
+        "event_type": "new_file",
+        "source_system": "Openpowerlifting.org",
+        "file_md5_hash": hash,
+        "s3_location": s3_location,
+    }
+    insert_row_data_ingest_log(
+        payload,
+        athena,
+        s3_output_location
+    )
