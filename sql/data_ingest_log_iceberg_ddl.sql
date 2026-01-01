@@ -1,6 +1,7 @@
 CREATE TABLE metadata.data_ingest_log (
     event_id        int,
     ingest_ts       timestamp,
+    event_producer  string,
     event_type      string,
     source_system   string,
     file_md5_hash   string,

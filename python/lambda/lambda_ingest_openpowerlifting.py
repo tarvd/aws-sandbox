@@ -23,6 +23,10 @@ athena = boto3.client("athena")
 s3 = boto3.client("s3")
 sns = boto3.client("sns")
 
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
+
 
 def get_file_from_url(url: str) -> BytesIO:
     response = requests.get(url, stream=True, timeout=300)
@@ -109,16 +113,19 @@ def run_athena_query(
 
 def compare_ingestion_hash(
     hash: str,
+    lambda_function: str,
     athena_client,
     s3_output_location: str,
-    log_table: str = "metadata.data_ingest_log",
-    hash_column: str = "file_md5_hash",
-    database: str = "metadata",
 ) -> bool:
     hash_exists = False
-    query = f"select count(*) > 0 as hash_exists from {log_table} where {hash_column} = '{hash}'"
+    query = f"""
+        select count(*) > 0 as hash_exists 
+        from metadata.data_ingest_log
+        where file_md5_hash = '{hash}'
+        and event_producer = '{lambda_function}'
+    """
     query_results = run_athena_query(
-        query, athena_client, database, s3_output_location
+        query, athena_client, "metadata", s3_output_location
     )["Rows"][0][0]["VarCharValue"]
     if query_results != "false":
         hash_exists = True
@@ -154,10 +161,11 @@ def insert_row_data_ingest_log(
     log_table: str = "metadata.data_ingest_log",
 ) -> None:
     insert_sql = f"""
-        insert into {log_table} (event_id, ingest_ts, event_type, source_system, file_md5_hash, payload)
+        insert into {log_table} (event_id, ingest_ts, event_producer, event_type, source_system, file_md5_hash, payload)
         select 
             coalesce(max(event_id)+1,0) as event_id,
             cast('{payload["ingest_ts"]}' as timestamp) as ingest_ts,
+            '{payload["event_producer"]}' as event_producer,
             '{payload["event_type"]}' as event_type,
             '{payload["source_system"]}' as source_system,
             '{payload["file_md5_hash"]}' as file_md5_hash,
@@ -177,12 +185,6 @@ def lambda_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
         Dict containing status message
     """
 
-    logger = logging.getLogger(__name__)
-    logging.basicConfig(
-        filename=f"{LAMBDA}.log",
-        encoding="utf-8",
-        level=logging.INFO,
-    )
     logger.info(
         f"Lambda function {LAMBDA} started. URL: {URL}, Bucket: {BUCKET}"
     )
@@ -190,7 +192,7 @@ def lambda_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
     try:
         zip_file = get_file_from_url(URL)
         hash = get_md5_from_buffer(zip_file)
-        hash_exists = compare_ingestion_hash(hash, athena, S3_OUTPUT_LOCATION)
+        hash_exists = compare_ingestion_hash(hash, LAMBDA, athena, S3_OUTPUT_LOCATION)
 
         logger.info(
             f"Zip file downloaded. MD5 hash: {hash} , Hash exists in data ingestion log: {hash_exists}"
@@ -207,6 +209,7 @@ def lambda_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
 
         payload = {
             "ingest_ts": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S.%f"),
+            "event_producer": LAMBDA,
             "event_type": "new_file",
             "source_system": "Openpowerlifting.org",
             "file_md5_hash": hash,
