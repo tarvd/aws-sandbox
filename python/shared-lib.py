@@ -1,18 +1,21 @@
-from hashlib import md5
-from io import BytesIO
-from zipfile import ZipFile
+# import os
 import time
 import json
-from datetime import datetime, timezone
+# import logging
+# import traceback
+from datetime import datetime #, timezone
+# from typing import Any
+from zipfile import ZipFile
+from io import BytesIO
+from hashlib import md5
 
-import boto3
+# import boto3
 import requests
 
 
 def get_file_from_url(url: str) -> BytesIO:
     response = requests.get(url, stream=True, timeout=300)
     response.raise_for_status()
-
     buffer = BytesIO(response.content)
     buffer.seek(0)
     return buffer
@@ -112,7 +115,7 @@ def compare_ingestion_hash(
     return hash_exists
 
 
-def process_opl_zip(zip_file: BytesIO, bucket: str, s3_client) -> str:
+def ingest_opl_zip(zip_file: BytesIO, bucket: str, s3_client) -> str:
     with ZipFile(zip_file) as z:
         csv_files = [name for name in z.namelist() if name.endswith(".csv")]
 
@@ -152,33 +155,3 @@ def insert_row_data_ingest_log(
     """
     run_athena_query(insert_sql, athena_client, database, output_location, False)
 
-
-url = "https://openpowerlifting.gitlab.io/opl-csv/files/openpowerlifting-latest.zip"
-s3_output_location = "s3://dev-use2-tedsand-athena-results-s3/primary/"
-bucket = "dev-use2-tedsand-raw-data-s3"
-
-athena = boto3.client("athena")
-s3 = boto3.client("s3")
-
-zip_file = get_file_from_url(url)
-hash = get_md5_from_buffer(zip_file)
-print(hash)
-hash_exists = compare_ingestion_hash(hash, athena, s3_output_location)
-hash_exists = False
-if hash_exists:
-    print("data already ingested! I'm going back to bed.")
-else:
-    print("processing this new data")
-    s3_location = process_opl_zip(zip_file, bucket, s3)
-    payload = {
-        "ingest_ts": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S.%f"),
-        "event_type": "new_file",
-        "source_system": "Openpowerlifting.org",
-        "file_md5_hash": hash,
-        "s3_location": s3_location,
-    }
-    insert_row_data_ingest_log(
-        payload,
-        athena,
-        s3_output_location
-    )
