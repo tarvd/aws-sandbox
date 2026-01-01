@@ -1,0 +1,3 @@
+logging 
+open zip file 
+check for CSVs
