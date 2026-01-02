@@ -1,16 +1,10 @@
 import os
-import time
-import json
 import logging
 import traceback
 from datetime import datetime, timezone
 from typing import Any
-from zipfile import ZipFile
-from io import BytesIO
-from hashlib import md5
 
 import boto3
-import requests
 
 from utils import get_file_from_url, get_md5_from_buffer, compare_ingestion_hash, ingest_opl_zip, insert_row_data_ingest_log
 
