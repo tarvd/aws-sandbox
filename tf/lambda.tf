@@ -1,25 +1,43 @@
-resource "archive_file" "openpowerlifting_ingest_zip" {
+data "archive_file" "openpowerlifting_ingest_zip" {
   type        = "zip"
-  source_file = var.lambda_openpowerlifting_py_file
-  output_path = var.lambda_openpowerlifting_archive
+  source_file = var.lambda_openpowerlifting_src
+  output_path = var.lambda_openpowerlifting_build
 }
 
-data "archive_file" "utils_layer" {
+resource "aws_s3_object" "openpowerlifting_ingest_zip" {
+  bucket = aws_s3_bucket.python.id
+  key    = var.lambda_openpowerlifting_s3_key
+
+  source = var.lambda_openpowerlifting_build
+  etag   = filemd5(var.lambda_openpowerlifting_build)
+}
+
+data "archive_file" "utils_layer_zip" {
   type        = "zip"
-  source_dir  = var.lambda_layer_utils_directory
-  output_path = var.lambda_layer_utils_archive
+  source_dir  = var.lambda_layer_utils_src
+  output_path = var.lambda_layer_utils_build
+}
+
+resource "aws_s3_object" "utils_layer_zip" {
+  bucket = aws_s3_bucket.python.id
+  key    = var.lambda_layer_utils_s3_key
+
+  source = var.lambda_layer_utils_build
+  etag   = filemd5(var.lambda_layer_utils_build)
 }
 
 resource "aws_lambda_layer_version" "utils" {
-  layer_name = "utils-layer"
-  filename         = var.lambda_layer_utils_archive
-  source_code_hash = data.archive_file.utils_layer.output_base64sha256
+  layer_name          = var.lambda_layer_utils_name
+  s3_bucket           = aws_s3_object.utils_layer_zip.bucket
+  s3_key              = aws_s3_object.utils_layer_zip.key
+  source_code_hash    = data.archive_file.utils_layer_zip.output_base64sha256
   compatible_runtimes = ["python3.13"]
-  description = "Shared Python utilities for Lambdas"
+  description         = "Shared Python utilities for Lambdas"
 }
 
 resource "aws_lambda_function" "openpowerlifting_ingest" {
-  filename         = var.lambda_openpowerlifting_archive
+  s3_bucket          = aws_s3_object.openpowerlifting_ingest_zip.bucket
+  s3_key             = aws_s3_object.openpowerlifting_ingest_zip.key
   handler          = var.lambda_openpowerlifting_handler
   function_name    = var.lambda_function_openpowerlifting.function_name
   runtime          = var.lambda_function_openpowerlifting.runtime
@@ -30,7 +48,7 @@ resource "aws_lambda_function" "openpowerlifting_ingest" {
   memory_size      = var.lambda_function_openpowerlifting.memory_size
   publish          = var.lambda_function_openpowerlifting.publish
   timeout          = var.lambda_function_openpowerlifting.timeout
-  source_code_hash = archive_file.openpowerlifting_ingest_zip.output_base64sha256
+  source_code_hash = data.archive_file.openpowerlifting_ingest_zip.output_base64sha256
 
   environment {
     variables = {

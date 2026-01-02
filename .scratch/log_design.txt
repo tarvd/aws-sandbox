@@ -8,23 +8,6 @@ Log Layer:
 Iceberg table in Glue catalog
 Sequential integer index
 Has timestamp of event posting to log, type of event, source of event, payload
-
-CREATE TABLE raw_events.orders (
-    event_id        int,
-    ingest_ts       timestamp,
-    event_type      string,
-    source_system   string,
-    payload         struct<
-        csv schema
-    >
-)
-PARTITIONED BY (days(event_ts))
-LOCATION 's3://data-lake/log/raw_events/orders'
-TBLPROPERTIES (
-    'table_type'='ICEBERG',
-    'format-version'='2'
-);
-
 Ingestion functions write to log, data consumers read the log and update their own tracking of their last read entry in the log
 
 Consumer Layer:
@@ -33,3 +16,4 @@ Can read the log events
 Keeps track of progress in the log internally (for GLue jobs or Athena queries this will have to be a Glue iceberg table since Glue is serverless)
 Offer ability to replay the log for a range of events 
 Use filtering when reading events to only process events applicable to the consumer 
+Each consumer must specify how they read the log and process the data: all at once, one at a time, what to read from the event payload. Avoid generalizing this.

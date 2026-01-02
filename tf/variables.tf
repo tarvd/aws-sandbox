@@ -135,6 +135,26 @@ variable "glue_table_openpowerlifting_raw" {
 
 # Glue ETL jobs, workflows, and triggers
 
+variable "py_utils_src" {
+  type    = string
+}
+
+variable "py_utils_build" {
+  type    = string
+  validation {
+    condition     = can(regex("\\.zip$", var.py_utils_build))
+    error_message = "Value must be a .zip file"
+  }
+}
+
+variable "py_utils_s3_key" {
+  type    = string
+  validation {
+    condition     = can(regex("\\.zip$", var.py_utils_s3_key))
+    error_message = "Value must be a .zip file"
+  }
+}
+
 variable "glue_job_openpowerlifting_cleanse" {
   type = object({
     name              = string
@@ -146,7 +166,8 @@ variable "glue_job_openpowerlifting_cleanse" {
     worker_type       = string
     execution_class   = string
     command           = string
-    script_location   = string
+    script            = string
+    s3_key            = string
     default_arguments = map(string)
   })
 }
@@ -226,19 +247,27 @@ variable "iam_policy_lambda_results_publish_to_sns_name" {
 
 # Lambda functions
 
-variable "lambda_openpowerlifting_py_file" {
+variable "lambda_openpowerlifting_src" {
   type    = string
   validation {
-    condition     = can(regex("\\.py$", var.lambda_openpowerlifting_py_file))
-    error_message = "Filename must be a .py file"
+    condition     = can(regex("\\.py$", var.lambda_openpowerlifting_src))
+    error_message = "Value must be a .py file"
   }
 }
 
-variable "lambda_openpowerlifting_archive" {
+variable "lambda_openpowerlifting_build" {
   type    = string
   validation {
-    condition     = can(regex("\\.zip$", var.lambda_openpowerlifting_archive))
-    error_message = "Filename must be a .zip file"
+    condition     = can(regex("\\.zip$", var.lambda_openpowerlifting_build))
+    error_message = "Value must be a .zip file"
+  }
+}
+
+variable "lambda_openpowerlifting_s3_key" {
+  type    = string
+  validation {
+    condition     = can(regex("\\.zip$", var.lambda_openpowerlifting_s3_key))
+    error_message = "Value must be a .zip file"
   }
 }
 
@@ -246,19 +275,31 @@ variable "lambda_openpowerlifting_handler" {
   type    = string
   validation {
     condition     = can(regex("\\.lambda_handler$", var.lambda_openpowerlifting_handler))
-    error_message = "Function must be a lambda handler"
+    error_message = "Value must be a lambda handler"
   }
 }
 
-variable "lambda_layer_utils_directory" {
+variable "lambda_layer_utils_name" {
   type    = string
 }
 
-variable "lambda_layer_utils_archive" {
+variable "lambda_layer_utils_src" {
+  type    = string
+}
+
+variable "lambda_layer_utils_build" {
   type    = string
   validation {
-    condition     = can(regex("\\.zip$", var.lambda_layer_utils_archive))
-    error_message = "Filename must be a .zip file"
+    condition     = can(regex("\\.zip$", var.lambda_layer_utils_build))
+    error_message = "Value must be a .zip file"
+  }
+}
+
+variable "lambda_layer_utils_s3_key" {
+  type    = string
+  validation {
+    condition     = can(regex("\\.zip$", var.lambda_layer_utils_s3_key))
+    error_message = "Value must be a .zip file"
   }
 }
 

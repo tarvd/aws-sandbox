@@ -1,3 +1,9 @@
-logging 
-open zip file 
-check for CSVs
+get zip file from url
+check if zip file has been ingested already via hash lookup
+    yes -> end lambda 
+    no -> continue 
+ingest zip file to s3
+log ingestion to data lake
+
+if error, raise error
+at ingest-yes, ingest-no, or error, log it and also send an SNS message for the email listener

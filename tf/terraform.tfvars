@@ -104,6 +104,10 @@ glue_table_openpowerlifting_raw = {
 
 # Glue ETL jobs, workflows, and triggers
 
+py_utils_src = "../python/utils"
+py_utils_build = "../build/utils.zip"
+py_utils_s3_key = "libs/utils.zip"
+
 glue_job_openpowerlifting_cleanse = {
     name              = "dev-use2-tedsand-openpowerlifting-cleanse-job"
     description       = "Job to source data from Openpowerlifting Raw Data to Iceberg Cleansed Table"
@@ -114,7 +118,8 @@ glue_job_openpowerlifting_cleanse = {
     worker_type       = "G.1X"
     execution_class   = "STANDARD"
     command           = "glueetl"
-    script_location       = "s3://dev-use2-tedsand-python-s3/glue/openpowerlifting_cleanse_job.py"
+    script            = "../python/glue/openpowerlifting_cleanse_job.py"
+    s3_key            = "glue/openpowerlifting_cleanse_job.py"
     default_arguments = {
       "--job-language"                     = "python"
       "--continuous-log-logGroup"          = "/aws-glue/jobs"
@@ -189,11 +194,15 @@ iam_policy_lambda_results_publish_to_sns_name = "dev-use2-tedsand-lambda-results
 
 # Lambda functions
 
-lambda_openpowerlifting_py_file = "../python/lambda/lambda_ingest_openpowerlifting.py"
-lambda_openpowerlifting_archive = "../build/lambda_ingest_openpowerlifting.zip"
+lambda_openpowerlifting_src = "../python/lambda/lambda_ingest_openpowerlifting.py"
+lambda_openpowerlifting_build = "../build/lambda_ingest_openpowerlifting.zip"
+lambda_openpowerlifting_s3_key = "lambda/lambda_ingest_openpowerlifting.zip"
 lambda_openpowerlifting_handler = "lambda_ingest_openpowerlifting.lambda_handler"
-lambda_layer_utils_directory = "../python/layers/utils"
-lambda_layer_utils_archive = "../build/utils.zip"
+
+lambda_layer_utils_name = "lambda_utils"
+lambda_layer_utils_src = "../python/layers/utils"
+lambda_layer_utils_build = "../build/lambda_utils.zip"
+lambda_layer_utils_s3_key = "libs/lambda_utils.zip"
 
 lambda_function_openpowerlifting = {
   function_name   = "dev-use2-tedsand-openpowerlifting-ingest-lambda"

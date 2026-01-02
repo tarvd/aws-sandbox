@@ -6,7 +6,7 @@ from typing import Any
 
 import boto3
 
-from utils import get_file_from_url, get_md5_from_buffer, compare_ingestion_hash, ingest_opl_zip, insert_row_data_ingest_log
+from utils.ingestion import get_file_from_url, get_md5_from_buffer, compare_ingestion_hash, ingest_opl_zip, insert_row_to_ingest_log
 
 
 BUCKET = os.environ["BUCKET"]
@@ -63,7 +63,7 @@ def lambda_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
             "s3_location": s3_location,
         }
         logger.info(f"File ingested, sending payload to Ingest Data Log: {payload}")
-        insert_row_data_ingest_log(
+        insert_row_to_ingest_log(
             payload,
             athena
         )
@@ -79,8 +79,7 @@ def lambda_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
 
         lambda_status = "FAILURE"
         message = f"\n\nLambda failed:\n\n{traceback.format_exc()}"
-        status = {"statusCode": 500, "message": message}
-        return status
+        raise e
     
     finally:
         logger.info(status)
