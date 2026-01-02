@@ -1,15 +1,9 @@
-# import os
 import time
 import json
-# import logging
-# import traceback
-from datetime import datetime #, timezone
-# from typing import Any
+from datetime import datetime
 from zipfile import ZipFile
 from io import BytesIO
 from hashlib import md5
-
-# import boto3
 import requests
 
 
@@ -29,8 +23,6 @@ def get_md5_from_buffer(buffer: BytesIO) -> str:
 def run_athena_query(
     query: str,
     athena_client,
-    database: str,
-    output_location: str,
     return_result: bool = True,
     poll_interval: float = 1.0,
     page_size: int = 1000,
@@ -38,8 +30,8 @@ def run_athena_query(
     # Initiate query
     start_args = {
         "QueryString": query,
-        "QueryExecutionContext": {"Database": database},
-        "ResultConfiguration": {"OutputLocation": output_location},
+        "QueryExecutionContext": {"Database": "metadata"},
+        "WorkGroup": "primary"
     }
 
     response = athena_client.start_query_execution(**start_args)
@@ -91,23 +83,29 @@ def run_athena_query(
                 page_args["NextToken"] = next_token
 
         return {
+            "Status": status,
             "ColumnInfo": column_info,
             "Rows": all_rows,
         }
+    else:
+        return {"Status": status}
 
 
 def compare_ingestion_hash(
     hash: str,
+    lambda_function: str,
     athena_client,
-    s3_output_location: str,
     log_table: str = "metadata.data_ingest_log",
-    hash_column: str = "file_md5_hash",
-    database: str = "metadata",
 ) -> bool:
     hash_exists = False
-    query = f"select count(*) > 0 as hash_exists from {log_table} where {hash_column} = '{hash}'"
+    query = f"""
+        select count(*) > 0 as hash_exists 
+        from {log_table}
+        where file_md5_hash = '{hash}'
+        and event_producer = '{lambda_function}'
+    """
     query_results = run_athena_query(
-        query, athena_client, database, s3_output_location
+        query, athena_client
     )["Rows"][0][0]["VarCharValue"]
     if query_results != "false":
         hash_exists = True
@@ -138,20 +136,40 @@ def ingest_opl_zip(zip_file: BytesIO, bucket: str, s3_client) -> str:
 def insert_row_data_ingest_log(
     payload: dict,
     athena_client,
-    output_location: str,
-    database: str = "metadata",
     log_table: str = "metadata.data_ingest_log",
 ) -> None:
     insert_sql = f"""
-        insert into {log_table} (event_id, ingest_ts, event_type, source_system, file_md5_hash, payload)
+        insert into {log_table} (event_id, ingest_ts, event_producer, event_type, source_system, file_md5_hash, payload)
         select 
             coalesce(max(event_id)+1,0) as event_id,
             cast('{payload["ingest_ts"]}' as timestamp) as ingest_ts,
+            '{payload["event_producer"]}' as event_producer,
             '{payload["event_type"]}' as event_type,
             '{payload["source_system"]}' as source_system,
             '{payload["file_md5_hash"]}' as file_md5_hash,
             '{json.dumps(payload)}' as payload
         from {log_table};
     """
-    run_athena_query(insert_sql, athena_client, database, output_location, False)
+    run_athena_query(insert_sql, athena_client, False)
+    return
 
+
+def get_event_hwm(event_consumer: str, athena_client, log_table: str = "metadata.data_process_log") -> int:
+    read_sql = f"""
+        select current_event_hwm
+        from {log_table}
+        where event_consumer = '{event_consumer}'
+        limit 1
+    """
+    event_hwm = int(run_athena_query(read_sql, athena_client)["Rows"][0][0]["VarCharValue"])
+    return event_hwm
+
+
+def set_event_hwm(event_consumer: str, event_hwm: int, athena_client, log_table: str = "metadata.data_process_log") -> None:
+    update_sql = f"""
+        update {log_table}
+        set current_event_hwm = {event_hwm}
+        where event_consumer = '{event_consumer}'
+    """
+    run_athena_query(update_sql, athena_client, False)
+    return

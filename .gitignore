@@ -57,3 +57,7 @@ terraform.rc
 dbt_athena/target/
 dbt_athena/dbt_packages/
 dbt_athena/logs/
+
+# build files
+build/
+build/*

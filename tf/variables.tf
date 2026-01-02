@@ -250,11 +250,22 @@ variable "lambda_openpowerlifting_handler" {
   }
 }
 
+variable "lambda_layer_utils_directory" {
+  type    = string
+}
+
+variable "lambda_layer_utils_archive" {
+  type    = string
+  validation {
+    condition     = can(regex("\\.zip$", var.lambda_layer_utils_archive))
+    error_message = "Filename must be a .zip file"
+  }
+}
+
 variable "lambda_function_openpowerlifting" {
   type = object({
     function_name    = string
     runtime          = string
-    layers           = list(string)
     memory_size      = number
     publish          = bool
     timeout          = number

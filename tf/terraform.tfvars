@@ -190,8 +190,10 @@ iam_policy_lambda_results_publish_to_sns_name = "dev-use2-tedsand-lambda-results
 # Lambda functions
 
 lambda_openpowerlifting_py_file = "../python/lambda/lambda_ingest_openpowerlifting.py"
-lambda_openpowerlifting_archive = "../python/lambda/lambda_ingest_openpowerlifting.zip"
+lambda_openpowerlifting_archive = "../build/lambda_ingest_openpowerlifting.zip"
 lambda_openpowerlifting_handler = "lambda_ingest_openpowerlifting.lambda_handler"
+lambda_layer_utils_directory = "../python/layers/utils"
+lambda_layer_utils_archive = "../build/utils.zip"
 
 lambda_function_openpowerlifting = {
   function_name   = "dev-use2-tedsand-openpowerlifting-ingest-lambda"
