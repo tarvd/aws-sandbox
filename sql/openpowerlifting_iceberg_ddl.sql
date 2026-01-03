@@ -1,4 +1,4 @@
-CREATE TABLE cleansed.openpowerlifting (
+CREATE TABLE IF NOT EXISTS cleansed.openpowerlifting (
   name string,
   sex string,
   event string,

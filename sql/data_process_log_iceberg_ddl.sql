@@ -1,4 +1,4 @@
-CREATE TABLE metadata.data_process_log (
+CREATE TABLE IF NOT EXISTS metadata.data_process_log (
     process_id            string,
     event_consumer        string,
     event_id              int,  

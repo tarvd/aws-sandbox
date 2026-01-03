@@ -1,4 +1,4 @@
-CREATE TABLE metadata.data_ingest_log (
+CREATE TABLE IF NOT EXISTS metadata.data_ingest_log (
     event_id        int,
     ingest_ts       timestamp,
     event_producer  string,
