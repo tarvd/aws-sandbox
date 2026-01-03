@@ -10,7 +10,12 @@ from pyspark.context import SparkContext
 from awsglue.context import GlueContext
 from pyspark.sql.functions import lit, concat_ws, current_timestamp, coalesce, sha2
 
-from utils.processing import get_process_event_id_hwm, get_latest_ingest_event_id, run_athena_query, insert_row_to_process_log
+from utils.processing import (
+    get_process_event_id_hwm,
+    get_latest_ingest_event_id,
+    run_athena_query,
+    insert_row_to_process_log,
+)
 
 # Logging
 MSG_FORMAT = "%(asctime)s %(levelname)s %(name)s: %(message)s"
@@ -80,6 +85,7 @@ glue = boto3.client("glue")
 s3 = boto3.client("s3")
 sns = boto3.client("sns")
 
+
 def main():
     try:
         logger.info("Beginning job, loading arguments.")
@@ -110,7 +116,7 @@ def main():
             message = "No new events to process."
             return
 
-        events_to_process = list(range(event_id_hwm+1, latest_event_id+1))
+        events_to_process = list(range(event_id_hwm + 1, latest_event_id + 1))
 
         for event_id in events_to_process:
             s3_location_sql = f"""
@@ -119,11 +125,17 @@ def main():
                 where event_id = {event_id}
                 limit 1
             """
-            filename = run_athena_query(s3_location_sql, athena)["Rows"][0][0]["VarCharValue"]
+            filename = run_athena_query(s3_location_sql, athena)["Rows"][0][0][
+                "VarCharValue"
+            ]
 
-            if filename == 'invalid':
-                logger.info(f"Adding row to metadata.data_process_log for event #{event_id}, filename: {filename}")
-                insert_row_to_process_log(job_name, event_id, event_id_hwm, job_run_id, athena)
+            if filename == "invalid":
+                logger.info(
+                    f"Adding row to metadata.data_process_log for event #{event_id}, filename: {filename}"
+                )
+                insert_row_to_process_log(
+                    job_name, event_id, event_id_hwm, job_run_id, athena
+                )
                 total_events_processed += 1
                 continue
 
@@ -190,17 +202,16 @@ def main():
                         WHERE row_hash NOT IN (SELECT row_hash FROM latest_data)
                     """)
 
-            logger.info(f"Adding row to metadata.data_process_log for event #{event_id}, filename: {filename}")
+            logger.info(
+                f"Adding row to metadata.data_process_log for event #{event_id}, filename: {filename}"
+            )
             insert_row_to_process_log(job_name, event_id, job_run_id, athena)
             total_events_processed += 1
             total_opl_events_processed += 1
             total_rows_processed += filtered_num_rows
 
-
         job_status = "SUCCESS"
-        message = (
-            f"\n\n{total_opl_events_processed} files processed and {total_rows_processed} rows added to {TARGET_DB}.{TARGET_TABLE}\n\n"
-        )
+        message = f"\n\n{total_opl_events_processed} files processed and {total_rows_processed} rows added to {TARGET_DB}.{TARGET_TABLE}\n\n"
         return
 
     except Exception as e:

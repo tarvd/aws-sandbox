@@ -1,8 +1,9 @@
-
 from utils.common import run_athena_query
 
 
-def get_process_event_id_hwm(event_consumer: str, athena_client, log_table: str = "metadata.data_process_log") -> int:
+def get_process_event_id_hwm(
+    event_consumer: str, athena_client, log_table: str = "metadata.data_process_log"
+) -> int:
     read_sql = f"""
         select current_event_hwm
         from {log_table}
@@ -18,7 +19,12 @@ def get_process_event_id_hwm(event_consumer: str, athena_client, log_table: str 
     return event_id_hwm
 
 
-def set_process_event_id_hwm(event_consumer: str, event_hwm: int, athena_client, log_table: str = "metadata.data_process_log") -> None:
+def set_process_event_id_hwm(
+    event_consumer: str,
+    event_hwm: int,
+    athena_client,
+    log_table: str = "metadata.data_process_log",
+) -> None:
     update_sql = f"""
         update {log_table}
         set current_event_hwm = {event_hwm}
@@ -28,18 +34,28 @@ def set_process_event_id_hwm(event_consumer: str, event_hwm: int, athena_client,
     return
 
 
-def get_latest_ingest_event_id(athena_client, log_table: str = "metadata.data_ingest_log") -> int:
+def get_latest_ingest_event_id(
+    athena_client, log_table: str = "metadata.data_ingest_log"
+) -> int:
     read_sql = f"""
         select coalesce(max(event_id),-1)
         from {log_table}
     """
-    latest_event_id = int(run_athena_query(read_sql, athena_client)["Rows"][0][0]["VarCharValue"])
+    latest_event_id = int(
+        run_athena_query(read_sql, athena_client)["Rows"][0][0]["VarCharValue"]
+    )
     return latest_event_id
 
 
-def insert_row_to_process_log(event_consumer: str, event_id: int, process_detail: str, athena_client, log_table: str = "metadata.data_process_log") -> None:
+def insert_row_to_process_log(
+    event_consumer: str,
+    event_id: int,
+    process_detail: str,
+    athena_client,
+    log_table: str = "metadata.data_process_log",
+) -> None:
     event_id_hwm = get_process_event_id_hwm(event_consumer, athena_client, log_table)
-    
+
     insert_sql = f"""
         insert into {log_table} (process_id, event_consumer, event_id, current_event_hwm, process_ts, process_detail)
         select 

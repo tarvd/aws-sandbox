@@ -1,21 +1,22 @@
-import time 
-import boto3 
+import time
+import boto3
+
 
 def run_athena_query(
     query: str,
-    athena_client = None,
+    athena_client=None,
     return_result: bool = True,
     poll_interval: float = 1.0,
     page_size: int = 1000,
 ) -> dict:
     if athena_client is None:
         athena_client = boto3.client("athena")
-        
+
     # Initiate query
     start_args = {
         "QueryString": query,
         "QueryExecutionContext": {"Database": "metadata"},
-        "WorkGroup": "primary"
+        "WorkGroup": "primary",
     }
 
     response = athena_client.start_query_execution(**start_args)

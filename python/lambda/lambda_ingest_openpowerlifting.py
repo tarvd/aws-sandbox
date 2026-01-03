@@ -6,7 +6,13 @@ from typing import Any
 
 import boto3
 
-from utils.ingestion import get_file_from_url, get_md5_from_buffer, compare_ingestion_hash, ingest_opl_zip, insert_row_to_ingest_log
+from utils.ingestion import (
+    get_file_from_url,
+    get_md5_from_buffer,
+    compare_ingestion_hash,
+    ingest_opl_zip,
+    insert_row_to_ingest_log,
+)
 
 
 BUCKET = os.environ["BUCKET"]
@@ -32,9 +38,7 @@ def lambda_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
         Dict containing status message
     """
 
-    logger.info(
-        f"Lambda function {LAMBDA} started. URL: {URL}, Bucket: {BUCKET}"
-    )
+    logger.info(f"Lambda function {LAMBDA} started. URL: {URL}, Bucket: {BUCKET}")
 
     try:
         zip_file = get_file_from_url(URL)
@@ -50,7 +54,7 @@ def lambda_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
             message = "No new data to ingest."
             status = {"statusCode": 200, "message": message}
             return status
-        
+
         logger.info("Ingesting file obtained from URL.")
         s3_location = ingest_opl_zip(zip_file, BUCKET, s3)
 
@@ -63,11 +67,7 @@ def lambda_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
             "s3_location": s3_location,
         }
         logger.info(f"File ingested, sending payload to Ingest Data Log: {payload}")
-        insert_row_to_ingest_log(
-            payload,
-            athena
-        )
-
+        insert_row_to_ingest_log(payload, athena)
 
         lambda_status = "SUCCESS"
         message = "File ingested successfully."
@@ -80,12 +80,12 @@ def lambda_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
         lambda_status = "FAILURE"
         message = f"\n\nLambda failed:\n\n{traceback.format_exc()}"
         raise e
-    
+
     finally:
         logger.info(status)
         logger.info("Sending SNS notification")
         sns.publish(
             TopicArn=SNS_TOPIC_ARN,
             Subject=f"Lambda {LAMBDA}: {lambda_status}",
-            Message=message
+            Message=message,
         )

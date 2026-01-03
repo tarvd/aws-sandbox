@@ -1,4 +1,3 @@
-
 import json
 from datetime import datetime
 from zipfile import ZipFile
@@ -6,7 +5,8 @@ from io import BytesIO
 from hashlib import md5
 import requests
 
-from utils.common import run_athena_query 
+from utils.common import run_athena_query
+
 
 def get_file_from_url(url: str) -> BytesIO:
     response = requests.get(url, stream=True, timeout=300)
@@ -19,7 +19,6 @@ def get_file_from_url(url: str) -> BytesIO:
 def get_md5_from_buffer(buffer: BytesIO) -> str:
     buffer.seek(0)
     return md5(buffer.read()).hexdigest()
-
 
 
 def compare_ingestion_hash(
@@ -35,9 +34,7 @@ def compare_ingestion_hash(
         where file_md5_hash = '{hash}'
         and event_producer = '{lambda_function}'
     """
-    query_results = run_athena_query(
-        query, athena_client
-    )["Rows"][0][0]["VarCharValue"]
+    query_results = run_athena_query(query, athena_client)["Rows"][0][0]["VarCharValue"]
     if query_results != "false":
         hash_exists = True
 
