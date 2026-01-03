@@ -127,8 +127,6 @@ variable "glue_table_openpowerlifting_raw" {
     compressed = bool
     serialization_library = string
     separation_char = string
-    column_list = list(string)
-    partition_column_list = list(string)
   })
 }
 

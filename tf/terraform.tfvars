@@ -88,17 +88,6 @@ glue_table_openpowerlifting_raw = {
   compressed = false
   serialization_library = "org.apache.hadoop.hive.serde2.OpenCSVSerde"
   separation_char = ","
-  column_list = [
-    "name", "sex", "event", "equipment", "age", "ageclass", "birthyearclass",
-    "division", "bodyweightkg", "weightclasskg", "squat1kg", "squat2kg",
-    "squat3kg", "squat4kg", "best3squatkg", "bench1kg", "bench2kg", "bench3kg",
-    "bench4kg", "best3benchkg", "deadlift1kg", "deadlift2kg", "deadlift3kg",
-    "deadlift4kg", "best3deadliftkg", "totalkg", "place", "dots", "wilks",
-    "glossbrenner", "goodlift", "tested", "country", "state", "federation",
-    "parentfederation", "date", "meetcountry", "meetstate", "meettown",
-    "meetname", "sanctioned"
-  ]
-  partition_column_list = ["year", "month", "day"]
 }
 
 

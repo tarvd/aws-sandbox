@@ -62,7 +62,16 @@ resource "aws_glue_catalog_table" "openpowerlifting" {
     }
 
     dynamic "columns" {
-      for_each = var.glue_table_openpowerlifting_raw.column_list
+      for_each = [
+        "name", "sex", "event", "equipment", "age", "ageclass", "birthyearclass",
+        "division", "bodyweightkg", "weightclasskg", "squat1kg", "squat2kg",
+        "squat3kg", "squat4kg", "best3squatkg", "bench1kg", "bench2kg", "bench3kg",
+        "bench4kg", "best3benchkg", "deadlift1kg", "deadlift2kg", "deadlift3kg",
+        "deadlift4kg", "best3deadliftkg", "totalkg", "place", "dots", "wilks",
+        "glossbrenner", "goodlift", "tested", "country", "state", "federation",
+        "parentfederation", "date", "meetcountry", "meetstate", "meettown",
+        "meetname", "sanctioned"
+      ]
       content {
         name    = columns.value
         type    = "string"
@@ -72,7 +81,7 @@ resource "aws_glue_catalog_table" "openpowerlifting" {
   }
 
   dynamic "partition_keys" {
-    for_each = var.glue_table_openpowerlifting_raw.partition_column_list
+    for_each = ["year", "month", "day"]
     content {
       name = partition_keys.value
       type = "string"
