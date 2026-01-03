@@ -3,6 +3,8 @@ import logging
 import traceback
 from datetime import datetime, timezone
 from typing import Any
+from zipfile import ZipFile
+from io import BytesIO
 
 import boto3
 
@@ -10,7 +12,6 @@ from utils.ingestion import (
     get_file_from_url,
     get_md5_from_buffer,
     compare_ingestion_hash,
-    ingest_opl_zip,
     insert_row_to_ingest_log,
 )
 
@@ -26,6 +27,26 @@ sns = boto3.client("sns")
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
+
+
+def ingest_opl_zip(zip_file: BytesIO, bucket: str, s3_client) -> str:
+    with ZipFile(zip_file) as z:
+        csv_files = [name for name in z.namelist() if name.endswith(".csv")]
+
+    if not csv_files:
+        raise ValueError("No CSV files found in the ZIP archive.")
+    csv_path = csv_files[0]
+
+    csv_fn = csv_path.split("/")[-1]
+    current_time = datetime.now()
+    prefix = f"openpowerlifting/year={current_time.strftime('%Y')}/month={current_time.strftime('%m')}/day={current_time.strftime('%d')}/"
+    key = prefix + csv_fn
+
+    with ZipFile(zip_file) as z:
+        with z.open(csv_path, "r") as csv_file:
+            s3_client.upload_fileobj(csv_file, bucket, key)
+
+    return f"s3://{bucket}/{key}"
 
 
 def lambda_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
