@@ -43,10 +43,13 @@
       "Resource": [
         "arn:aws:s3:::${python_s3_bucket}",
         "arn:aws:s3:::${python_s3_bucket}/glue/*",
+        "arn:aws:s3:::${python_s3_bucket}/libs/*",
         "arn:aws:s3:::${raw_data_s3_bucket}",
         "arn:aws:s3:::${raw_data_s3_bucket}/*",
         "arn:aws:s3:::${iceberg_s3_bucket}",
-        "arn:aws:s3:::${iceberg_s3_bucket}/*"
+        "arn:aws:s3:::${iceberg_s3_bucket}/*",
+        "arn:aws:s3:::${athena_s3_bucket}",
+        "arn:aws:s3:::${athena_s3_bucket}/*"
       ]
     },
     {

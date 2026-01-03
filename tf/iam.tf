@@ -20,6 +20,7 @@ resource "aws_iam_policy" "glue_job_policy" {
       python_s3_bucket   = "${aws_s3_bucket.python.bucket}"
       raw_data_s3_bucket = "${aws_s3_bucket.raw_data.bucket}"
       iceberg_s3_bucket  = "${aws_s3_bucket.iceberg.bucket}"
+      athena_s3_bucket  = "${aws_s3_bucket.athena_results.bucket}"
     })
 }
 
@@ -31,6 +32,11 @@ resource "aws_iam_role_policy_attachment" "glue_job_attach" {
 resource "aws_iam_role_policy_attachment" "glue-job-role-sns-policy-attach" {
   role       = aws_iam_role.glue_job_role.name
   policy_arn = aws_iam_policy.lambda_results_publish_to_sns.arn
+}
+
+resource "aws_iam_role_policy_attachment" "glue-job-role-athena-policy-attach" {
+  role       = aws_iam_role.glue_job_role.name
+  policy_arn = data.aws_iam_policy.AmazonAthenaFullAccess.arn
 }
 
 resource "aws_iam_role" "glue_notebook_role" {

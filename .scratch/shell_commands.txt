@@ -1,0 +1,5 @@
+PowerShell - from aws-sandbox, add utils package to Python path
+$env:PYTHONPATH = "$PWD\python\utils\utils\;$env:PYTHONPATH"
+
+Command Prompt - from aws-sandbox, copy utils package to lambda layer dir
+robocopy .\python\utils\utils .\python\layers\utils\python\utils /E

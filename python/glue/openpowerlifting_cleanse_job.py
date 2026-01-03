@@ -4,13 +4,13 @@ import boto3
 import traceback
 from datetime import datetime, timezone
 
-
 from awsglue.transforms import *
 from awsglue.utils import getResolvedOptions
 from pyspark.context import SparkContext
 from awsglue.context import GlueContext
 from pyspark.sql.functions import lit, concat_ws, current_timestamp, coalesce, sha2
 
+from utils.processing import get_process_event_id_hwm, get_latest_ingest_event_id, run_athena_query, insert_row_to_process_log
 
 # Logging
 MSG_FORMAT = "%(asctime)s %(levelname)s %(name)s: %(message)s"
@@ -21,21 +21,14 @@ logger.setLevel(logging.INFO)
 
 
 # Constants and Config
+LOG_DB = "metadata"
+EVENTS_LOG = "data_ingest_log"
+PROCESS_LOG = "data_process_log"
 SOURCE_DB = "raw"
 SOURCE_TABLE = "openpowerlifting"
 SOURCE_SYSTEM = "Openpowerlifting.org"
 TARGET_DB = "cleansed"
 TARGET_TABLE = "openpowerlifting"
-CONTEXT = "RawToIcebergCleanseJob"
-
-PROCESSED_DATA_COLS = [
-    "file_key",
-    "job_name",
-    "context",
-    "processed_at",
-    "job_id",
-    "job_run_id",
-]
 
 RENAME_COLS_MAP = {
     "Name": "name",
@@ -82,6 +75,7 @@ RENAME_COLS_MAP = {
     "Sanctioned": "sanctioned",
 }
 
+athena = boto3.client("athena")
 glue = boto3.client("glue")
 s3 = boto3.client("s3")
 sns = boto3.client("sns")
@@ -98,61 +92,42 @@ def main():
         job_id = args["JOB_ID"]
         job_run_id = args["JOB_RUN_ID"]
         sns_topic_arn = args["sns_topic_arn"]
+
+        total_events_processed = 0
+        total_opl_events_processed = 0
         total_rows_processed = 0
 
-        logger.info(f"Reading list of files for {SOURCE_DB}.{SOURCE_TABLE}")
+        logger.info(f"Reading new events")
 
-        source_location = glue.get_table(DatabaseName=SOURCE_DB, Name=SOURCE_TABLE)[
-            "Table"
-        ]["StorageDescriptor"]["Location"]
-        split = source_location.split("/")
-        source_bucket = split[2]
-        source_prefix = "/".join(split[3:])
+        event_id_hwm = get_process_event_id_hwm(job_name, athena)
+        latest_event_id = get_latest_ingest_event_id(athena)
 
-        response = s3.list_objects_v2(Bucket=source_bucket, Prefix=source_prefix)
-        source_objects = [obj["Key"] for obj in response["Contents"]]
-        while response["IsTruncated"]:
-            token = response["NextContinuationToken"]
-            response = s3.list_objects_v2(
-                Bucket=source_bucket, Prefix=source_prefix, NextContinuationToken=token
-            )
-            source_objects.extend([obj["Key"] for obj in response["Contents"]])
+        if latest_event_id == -1:
+            raise ValueError("The event log is empty.")
 
-        skip_files_df = spark.sql(
-            f"SELECT file_key FROM glue_catalog.metadata.processed_data_log WHERE job_name='{job_name}' AND context='{CONTEXT}'"
-        )
-        skip_files_list = (
-            skip_files_df.select("file_key").rdd.flatMap(lambda x: x).collect()
-        )
-        source_file_list = sorted(
-            [
-                f"s3://{source_bucket}/{path}"
-                for path in source_objects
-                if f"s3://{source_bucket}/{path}" not in skip_files_list
-                and path[-4:] == ".csv"
-            ]
-        )
-
-        if len(source_file_list) == 0:
-            job_status = "NO NEW DATA"
-            message = "No new data to process."
+        if event_id_hwm == latest_event_id:
+            job_status = "NO NEW EVENTS"
+            message = "No new events to process."
             return
 
-        logger.info(f"Files to process: {source_file_list}")
+        events_to_process = list(range(event_id_hwm+1, latest_event_id+1))
 
-        # Process each file
-        for filename in source_file_list:
-            logger.info(f"Processing file: {filename}")
+        for event_id in events_to_process:
+            s3_location_sql = f"""
+                select coalesce(json_extract_scalar(payload, '$.s3_location'), 'invalid') as filename
+                from {LOG_DB}.{EVENTS_LOG} 
+                where event_id = {event_id}
+                limit 1
+            """
+            filename = run_athena_query(s3_location_sql, athena)["Rows"][0][0]["VarCharValue"]
 
-            # Keep track of processed files
-            processing_timestamp = datetime.now(timezone.utc)
-            processed_data_row = [
-                (filename, job_name, CONTEXT, processing_timestamp, job_id, job_run_id)
-            ]
-            processed_data_df = spark.createDataFrame(
-                processed_data_row, PROCESSED_DATA_COLS
-            )
+            if filename == 'invalid':
+                logger.info(f"Adding row to metadata.data_process_log for event #{event_id}, filename: {filename}")
+                insert_row_to_process_log(job_name, event_id, event_id_hwm, job_run_id, athena)
+                total_events_processed += 1
+                continue
 
+            logger.info(f"Processing event #{event_id}, file: {filename}")
             logger.info("Reading source file into Spark DF")
             df = glueContext.create_data_frame.from_options(
                 connection_type="s3",
@@ -188,42 +163,43 @@ def main():
                 f"Number of rows that will be loaded to target: {filtered_num_rows}"
             )
 
-            logger.info("Adding audit columns")
-            df = df.withColumn("source_system", lit(SOURCE_SYSTEM))
-            df = df.withColumn("source_table", lit(f"{SOURCE_DB}.{SOURCE_TABLE}"))
-            df = df.withColumn("inserted_at", current_timestamp())
-            df = df.withColumn("job_name", lit(job_name))
-            df = df.withColumn("job_id", lit(job_id))
-            df = df.withColumn("job_run_id", lit(job_run_id))
-            df = df.withColumn("is_deleted", lit(False))
+            if filtered_num_rows > 0:
+                logger.info("Adding audit columns")
+                df = df.withColumn("source_system", lit(SOURCE_SYSTEM))
+                df = df.withColumn("source_table", lit(f"{SOURCE_DB}.{SOURCE_TABLE}"))
+                df = df.withColumn("inserted_at", current_timestamp())
+                df = df.withColumn("job_name", lit(job_name))
+                df = df.withColumn("job_id", lit(job_id))
+                df = df.withColumn("job_run_id", lit(job_run_id))
+                df = df.withColumn("is_deleted", lit(False))
 
-            logger.info("Renaming columns from camel to snake case")
-            df = df.withColumnsRenamed(RENAME_COLS_MAP)
+                logger.info("Renaming columns from camel to snake case")
+                df = df.withColumnsRenamed(RENAME_COLS_MAP)
 
-            logger.info(f"Writing data to target {TARGET_DB}.{TARGET_TABLE}")
-            df.writeTo(f"glue_catalog.{TARGET_DB}.{TARGET_TABLE}").tableProperty(
-                "format-version", "2"
-            ).append()
+                logger.info(f"Writing data to target {TARGET_DB}.{TARGET_TABLE}")
+                df.writeTo(f"glue_catalog.{TARGET_DB}.{TARGET_TABLE}").tableProperty(
+                    "format-version", "2"
+                ).append()
 
-            # Mark records not in latest file as deleted
-            if filename == source_file_list[-1]:
-                df.createOrReplaceTempView("latest_data")
-                spark.sql(f"""
-                    UPDATE glue_catalog.{TARGET_DB}.{TARGET_TABLE}
-                    SET is_deleted = true
-                    WHERE row_hash NOT IN (SELECT row_hash FROM latest_data)
-                """)
+                # Mark records not in latest file as deleted
+                if event_id == latest_event_id:
+                    df.createOrReplaceTempView("latest_data")
+                    spark.sql(f"""
+                        UPDATE glue_catalog.{TARGET_DB}.{TARGET_TABLE}
+                        SET is_deleted = true
+                        WHERE row_hash NOT IN (SELECT row_hash FROM latest_data)
+                    """)
 
-            logger.info(f"Adding row to metadata.processed_data_log for {filename}")
-            processed_data_df.writeTo(
-                "glue_catalog.metadata.processed_data_log"
-            ).tableProperty("format-version", "2").append()
-
+            logger.info(f"Adding row to metadata.data_process_log for event #{event_id}, filename: {filename}")
+            insert_row_to_process_log(job_name, event_id, job_run_id, athena)
+            total_events_processed += 1
+            total_opl_events_processed += 1
             total_rows_processed += filtered_num_rows
+
 
         job_status = "SUCCESS"
         message = (
-            f"\n\n{total_rows_processed} rows added to {TARGET_DB}.{TARGET_TABLE}"
+            f"\n\n{total_opl_events_processed} files processed and {total_rows_processed} rows added to {TARGET_DB}.{TARGET_TABLE}\n\n"
         )
         return
 
