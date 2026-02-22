@@ -2,6 +2,7 @@
 __pycache__/
 *.py[oc]
 build/
+build/*
 dist/
 wheels/
 *.egg-info
@@ -54,9 +55,10 @@ terraform.rc
 .vscode/*
 
 # dbt
-dbt_athena/target/
-dbt_athena/dbt_packages/
-dbt_athena/logs/
+dbt_tedsand/target/
+dbt_tedsand/dbt_packages/
+dbt_tedsand/logs/
 
-# build files
-build/*
+# scratch work
+.scratch
+.scratch/
